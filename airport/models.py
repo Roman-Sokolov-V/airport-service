@@ -56,10 +56,10 @@ class Airport(models.Model):
 
 class Route(models.Model):
     source = models.ForeignKey(
-        Airport, on_delete=models.CASCADE, related_name="routes"
+        Airport, on_delete=models.CASCADE, related_name="routes_from"
     )
     destination = models.ForeignKey(
-        Airport, on_delete=models.CASCADE, related_name="routes"
+        Airport, on_delete=models.CASCADE, related_name="routes_to"
     )
     distance = models.IntegerField()
 
