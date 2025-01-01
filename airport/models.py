@@ -13,7 +13,7 @@ class AirplanType(models.Model):
 class Airplan(models.Model):
     name = models.CharField(max_length=100)
     rows = models.IntegerField()
-    seats = models.IntegerField()
+    seats_in_row = models.IntegerField()
     airplan_type = models.ForeignKey(
         AirplanType, on_delete=models.CASCADE, related_name="airplanes"
     )
