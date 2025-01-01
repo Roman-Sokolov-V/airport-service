@@ -1,6 +1,8 @@
 from django.db import models
 from django.db.models import ForeignKey
 
+from service_config import settings
+
 
 class AirplanType(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -85,6 +87,7 @@ class Flight(models.Model):
 
 class Order(models.Model):
     created = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
 
 class Ticket(models.Model):
