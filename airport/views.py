@@ -1,5 +1,15 @@
-from airport.models import AirplanType, Airplan, Country, City, Airport, Route, \
-    Crew, Flight, Ticket, Order
+from airport.models import (
+    AirplanType,
+    Airplan,
+    Country,
+    City,
+    Airport,
+    Route,
+    Crew,
+    Flight,
+    Ticket,
+    Order
+)
 from django.shortcuts import render
 
 from airport.serializers import (
