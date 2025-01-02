@@ -64,7 +64,7 @@ class Route(models.Model):
     distance = models.IntegerField()
 
     def __str__(self):
-        return f"{self.source}-{self.destination}"
+        return f"From {self.source} to {self.destination}"
 
 class Crew(models.Model):
     first_name = models.CharField(max_length=100)
@@ -104,6 +104,3 @@ class Ticket(models.Model):
 
     class Meta:
         unique_together = ("row", "seat", "flight")
-
-
-

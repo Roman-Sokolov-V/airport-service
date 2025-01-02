@@ -12,7 +12,7 @@ class AirplanTypeSerializer(serializers.ModelSerializer):
 class AirplaneSerializer(serializers.ModelSerializer):
     class Meta:
         model = Airplan
-        fields = ("id", "name", "row", "seats_in_row", "airplan_type")
+        fields = ("id", "name", "rows", "seats_in_row", "airplan_type")
 
 
 class CountrySerializer(serializers.ModelSerializer):
@@ -24,7 +24,7 @@ class CountrySerializer(serializers.ModelSerializer):
 class CitySerializer(serializers.ModelSerializer):
     class Meta:
         model = City
-        fields = ("id", "name")
+        fields = ("id", "name", "country")
 
 
 class AirportSerializer(serializers.ModelSerializer):
@@ -49,6 +49,13 @@ class FlightSerializer(serializers.ModelSerializer):
     class Meta:
         model = Flight
         fields = ("id", "route", "airplan", "departure_time", "arrival_time",)
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ("id", "created", "user")
+
 
 
 class TicketSerializer(serializers.ModelSerializer):
