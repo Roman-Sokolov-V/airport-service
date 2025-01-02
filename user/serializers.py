@@ -15,3 +15,5 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """create and return a new `User` instance, given the validated data."""
         return get_user_model().objects.create_user(**validated_data)
+
+
