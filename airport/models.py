@@ -49,10 +49,8 @@ class Airport(models.Model):
         unique_together = ("name", "closest_big_city")
 
     def __str__(self):
-        return (
-            f"{self.name}/{self.closest_big_city.name}/"
-                f"{self.closest_big_city.country}"
-        )
+        return self.name
+
 
 class Route(models.Model):
     source = models.ForeignKey(
@@ -104,3 +102,44 @@ class Ticket(models.Model):
 
     class Meta:
         unique_together = ("row", "seat", "flight")
+
+    @staticmethod
+    def validate_ticket(row: int, rows: int, seat: int, seats: int, error_to_rase):
+        if not (1 <= row <= rows):
+            raise error_to_rase(
+                {
+                    "row": f"row must be in range [1, {rows}]"
+                }
+            )
+        if not (1 <= seat <= seats):
+            raise error_to_rase(
+                {
+                    "seat": f"seat must be in range "
+                            f"[1, {seats}]"
+                }
+            )
+
+
+    def clean(self):
+        validate_ticket(
+            row=self.row,
+            rows=self.flight.airplan.rows,
+            seat=self.seat,
+            seats=self.flight.airplan.seats_in_row,
+            error_to_rase=ValueError,
+        )
+
+    def save(
+        self,
+        force_insert = False,
+        force_update = False,
+        using = None,
+        update_fields = None,
+    ):
+        self.full_clean()
+        super().save(
+            force_insert=force_insert,
+            force_update=force_update,
+            using=using,
+            update_fields=update_fields,
+        )

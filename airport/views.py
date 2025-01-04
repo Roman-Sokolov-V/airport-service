@@ -92,7 +92,12 @@ class FlightViewSet(viewsets.ModelViewSet):
 
 
 class OrderViewSet(viewsets.ModelViewSet):
-    queryset = Order.objects.all()
+    queryset = Order.objects.all().prefetch_related(
+    "tickets__flight__route__source",
+        "tickets__flight__route__destination",
+        "tickets__flight__airplan",
+
+)
     serializer_class = OrderCreateSerializer
     permission_classes = (IsAuthenticated,)
 
@@ -108,10 +113,3 @@ class OrderViewSet(viewsets.ModelViewSet):
             return OrderListSerializer
         elif self.action == "create":
             return OrderCreateSerializer
-
-# class TicketViewSet(viewsets.ModelViewSet):
-#     queryset = Ticket.objects.all()
-#     serializer_class = TicketSerializer
-#     permission_classes = (IsAuthenticated,)
-
-

@@ -2,6 +2,9 @@ from django.db import transaction
 from rest_framework import serializers
 
 from airport.models import *
+from rest_framework.validators import UniqueTogetherValidator
+
+
 
 
 class AirplanTypeSerializer(serializers.ModelSerializer):
@@ -82,8 +85,8 @@ class FlightSerializer(serializers.ModelSerializer):
         fields = ("id", "route", "airplan", "departure_time", "arrival_time",)
 
 class FlightListSerializer(serializers.ModelSerializer):
-    airplan = AirplaneSerializer(many=False, read_only=True)
-    route = RouteListSerializer(many=False, read_only=True)
+    airplan = serializers.StringRelatedField(many=False, read_only=True)
+    route = serializers.StringRelatedField(many=False, read_only=True)
 
     class Meta:
         model = Flight
@@ -95,6 +98,22 @@ class TicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
         fields = ("id", "row", "seat", "flight")
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Ticket.objects.all(),
+                fields=("row", "seat", "flight"),
+            ),
+
+        ]
+
+    def validate(self, attrs):
+        Ticket.validate_ticket(
+            row=attrs["row"],
+            seat=attrs["seat"],
+            rows=attrs["flight"].airplan.rows,
+            seats=attrs["flight"].airplan.seats_in_row,
+            error_to_rase=serializers.ValidationError
+        )
 
 class TicketListSerializer(serializers.ModelSerializer):
     flight = FlightListSerializer(many=False, read_only=True)
