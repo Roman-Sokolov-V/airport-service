@@ -17,6 +17,7 @@ from airport.models import (
 from airport.serializers import (
     AirplanTypeSerializer,
     AirportSerializer,
+    AirplaneSerializer,
     CountrySerializer,
     CitySerializer,
     AirportSerializer,
@@ -24,9 +25,8 @@ from airport.serializers import (
     CrewSerializer,
     FlightSerializer,
     TicketSerializer,
-    OrderSerializer,
-    TicketSerializer,
-    AirplaneSerializer,
+    OrderListSerializer,
+    OrderCreateSerializer
 )
 
 from airport.permissions import IsAdminAllOrAuthenticatedReadOnly
@@ -93,14 +93,25 @@ class FlightViewSet(viewsets.ModelViewSet):
 
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
-    serializer_class = OrderSerializer
+    serializer_class = OrderCreateSerializer
     permission_classes = (IsAuthenticated,)
 
+    def get_queryset(self):
+        queryset = self.queryset.filter(user=self.request.user)
+        return queryset
 
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
-class TicketViewSet(viewsets.ModelViewSet):
-    queryset = Ticket.objects.all()
-    serializer_class = TicketSerializer
-    permission_classes = (IsAuthenticated,)
+    def get_serializer_class(self):
+        if self.action in ("list", "retrieve"):
+            return OrderListSerializer
+        elif self.action == "create":
+            return OrderCreateSerializer
+
+# class TicketViewSet(viewsets.ModelViewSet):
+#     queryset = Ticket.objects.all()
+#     serializer_class = TicketSerializer
+#     permission_classes = (IsAuthenticated,)
 
 
