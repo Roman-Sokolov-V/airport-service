@@ -29,7 +29,10 @@ from airport.serializers import (
     OrderListSerializer,
     OrderCreateSerializer,
     RouteListSerializer,
-    AirportListSerializer
+    AirportListSerializer,
+    CityListSerializer,
+    AirplaneListSerializer,
+    CountryListSerializer,
 )
 
 from airport.permissions import IsAdminAllOrAuthenticatedReadOnly
@@ -48,9 +51,14 @@ class AirplaneTypeViewSet(viewsets.ModelViewSet):
 
 
 class AirplaneViewSet(viewsets.ModelViewSet):
-    queryset = Airplan.objects.all()
+    queryset = Airplan.objects.select_related("airplan_type")
     serializer_class = AirplaneSerializer
     permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
+
+    def get_serializer_class(self):
+        if self.action in ("list", "retrieve"):
+            return AirplaneListSerializer
+        return self.serializer_class
 
 
 class CountryViewSet(viewsets.ModelViewSet):
@@ -58,10 +66,15 @@ class CountryViewSet(viewsets.ModelViewSet):
     serializer_class = CountrySerializer
     permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
 
+    def get_serializer_class(self):
+        if self.action in ("list", "retrieve"):
+            return CountryListSerializer
+        return self.serializer_class
+
 
 class CityViewSet(viewsets.ModelViewSet):
     queryset = City.objects.all()
-    serializer_class = CitySerializer
+    serializer_class = CityListSerializer
     permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
 
 
@@ -91,8 +104,13 @@ class AirportViewSet(viewsets.ModelViewSet):
 class RouteViewSet(viewsets.ModelViewSet):
     queryset = Route.objects.all().prefetch_related(
         "source__closest_big_city__country", "destination__closest_big_city__country")
-    serializer_class = RouteListSerializer
+    serializer_class = RouteSerializer
     permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
+
+    def get_serializer_class(self):
+        if self.action in ("list", "retrieve"):
+            return RouteListSerializer
+        return self.serializer_class
 
     @staticmethod
     def split_params(params):

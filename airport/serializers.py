@@ -19,16 +19,23 @@ class AirplaneSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "rows", "seats_in_row", "airplan_type")
 
 
+class AirplaneListSerializer(serializers.ModelSerializer):
+    airplan_type = serializers.StringRelatedField(many=False, read_only=True)
+    class Meta:
+        model = Airplan
+        fields = ("id", "name", "rows", "seats_in_row", "airplan_type")
+
 class CountrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Country
         fields = ("id", "name")
 
-
 class CountryListSerializer(serializers.ModelSerializer):
+    cities = serializers.StringRelatedField(many=True, read_only=True)
     class Meta:
         model = Country
-        fields = ("name",)
+        fields = ("id", "name", "cities")
+
 
 
 class CitySerializer(serializers.ModelSerializer):
@@ -38,7 +45,7 @@ class CitySerializer(serializers.ModelSerializer):
 
 
 class CityListSerializer(serializers.ModelSerializer):
-    country = CountryListSerializer(many=False, read_only=True)
+    country = serializers.StringRelatedField(many=False, read_only=True)
 
     class Meta:
         model = City
