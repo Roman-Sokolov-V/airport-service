@@ -83,47 +83,41 @@ class RouteViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = self.queryset
-        cities = self.request.query_params.get("cities")
-        airports = self.request.query_params.get("airports")
-
-        if cities:
+        for param in self.request.query_params:
+            if param not in ["countries", "cities", "airports"]:
+                continue
             try:
-                route = self.split_params(cities)
+                route = self.split_params(self.request.query_params[param])
                 if len(route) != 2:
                     raise ValidationError(
-                        {"cities": "Parameter 'cities' must contain exactly "
-                                   "two values separated by a '-'."}
+                        {
+                            param: f"Parameter {param} must contain "
+                                   f"exactly two values separated by a '-'."
+                        }
                     )
                 source, destination = route
                 source, destination = source.strip(), destination.strip()
-                queryset = queryset.filter(
-                    source__closest_big_city__name__iexact=source,
-                    destination__closest_big_city__name__iexact=destination
-                )
-            except Exception as e:
-                raise ValidationError({"cities": str(e)})
-
-        if airports:
-            try:
-                route = self.split_params(airports)
-                if len(route) != 2:
-                    raise ValidationError(
-                        {"airports": "Parameter 'airports' must contain "
-                                     "exactly two values separated by a '-'."}
+                if param == "cities":
+                    queryset = queryset.filter(
+                        source__closest_big_city__name__iexact=source,
+                        destination__closest_big_city__name__iexact=destination
                     )
-                source, destination = route
-                source_id, destination_id = int(source.strip()), int(
-                    destination.strip())
-                queryset = queryset.filter(
-                    source__id=source_id,
-                    destination__id=destination_id
-                )
+                elif param == "countries":
+                    queryset = queryset.filter(
+                        source__closest_big_city__country__name__iexact=source,
+                        destination__closest_big_city__country__name__iexact=destination
+                    )
+                elif param == "airports":
+                    queryset = queryset.filter(
+                        source__id=int(source),
+                        destination__id=int(destination)
+                    )
             except ValueError:
                 raise ValidationError(
                     {"airports": "Parameter 'airports' must contain valid integers."}
                 )
             except Exception as e:
-                raise ValidationError({"airports": str(e)})
+                raise ValidationError({param: str(e)})
 
         return queryset
 
