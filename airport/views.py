@@ -28,7 +28,8 @@ from airport.serializers import (
     TicketSerializer,
     OrderListSerializer,
     OrderCreateSerializer,
-    RouteListSerializer
+    RouteListSerializer,
+    AirportListSerializer
 )
 
 from airport.permissions import IsAdminAllOrAuthenticatedReadOnly
@@ -66,14 +67,30 @@ class CityViewSet(viewsets.ModelViewSet):
 
 
 class AirportViewSet(viewsets.ModelViewSet):
-    queryset = Airport.objects.all()
-    serializer_class = AirportSerializer
+    queryset = Airport.objects.all().select_related("closest_big_city__country")
+    serializer_class = AirportListSerializer
     permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
 
 
+    def get_queryset(self):
+        queryset = self.queryset
+        country = self.request.query_params.get("country")
+        city = self.request.query_params.get("city")
+        if country:
+            queryset = queryset.filter(
+                closest_big_city__country__name__iexact=country
+            )
+        if city:
+            queryset = queryset.filter(
+                closest_big_city__name__iexact=city
+            )
+
+        return queryset
+
 
 class RouteViewSet(viewsets.ModelViewSet):
-    queryset = Route.objects.all()
+    queryset = Route.objects.all().prefetch_related(
+        "source__closest_big_city__country", "destination__closest_big_city__country")
     serializer_class = RouteListSerializer
     permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
 
