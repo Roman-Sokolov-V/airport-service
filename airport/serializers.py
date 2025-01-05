@@ -89,7 +89,8 @@ class CrewSerializer(serializers.ModelSerializer):
 class FlightSerializer(serializers.ModelSerializer):
     class Meta:
         model = Flight
-        fields = ("id", "route", "airplan", "departure_time", "arrival_time",)
+        fields = ("id", "route", "airplan", "departure_time",
+                  "arrival_time", "crew")
 
 class FlightListSerializer(serializers.ModelSerializer):
     airplan = serializers.StringRelatedField(many=False, read_only=True)
