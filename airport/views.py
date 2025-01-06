@@ -1,3 +1,5 @@
+from django.db.models import Count
+
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.exceptions import ValidationError
@@ -168,7 +170,9 @@ class CrewViewSet(viewsets.ModelViewSet):
 class FlightViewSet(viewsets.ModelViewSet):
     queryset = Flight.objects.select_related(
        "airplane", "route__source", "route__destination"
-    ).prefetch_related("crew", "taken_tickets",)
+    ).prefetch_related("crew", "taken_tickets",).annotate(
+        num_taken_tickets=Count(
+        "taken_tickets"))
     serializer_class = FlightSerializer
     permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
 
@@ -233,8 +237,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     "tickets__flight__route__source",
         "tickets__flight__route__destination",
         "tickets__flight__airplane",
-
-)
+    )
     serializer_class = OrderCreateSerializer
     permission_classes = (IsAuthenticated,)
 

@@ -97,21 +97,20 @@ class FlightSerializer(serializers.ModelSerializer):
 class FlightListSerializer(serializers.ModelSerializer):
     airplane = serializers.StringRelatedField(many=False, read_only=True)
     route = serializers.StringRelatedField(many=False, read_only=True)
-    crew = serializers.StringRelatedField(many=True, read_only=True)
     tickets = serializers.SerializerMethodField()
 
     class Meta:
         model = Flight
         fields = ("id", "route", "airplane", "departure_time",
-                  "arrival_time", "crew", "tickets")
+                  "arrival_time", "tickets")
 
     def get_tickets(self, obj):
         all_tickets = obj.airplane.rows * obj.airplane.seats_in_row
-        sold_tickets = Ticket.objects.filter(flight=obj).aggregate(Count("id"))
-        return {"all_tickets": all_tickets, "sold_tickets": sold_tickets[
-            "id__count"],
-                "available_tickets": all_tickets - sold_tickets[
-            "id__count"]}
+        return {
+            "all_tickets": all_tickets,
+            "taken_tickets": obj.num_taken_tickets,
+            "available_tickets": all_tickets - obj.num_taken_tickets
+        }
 
 class FlightDetailSerializer(serializers.ModelSerializer):
     airplane = serializers.StringRelatedField(many=False, read_only=True)
