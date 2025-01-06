@@ -64,7 +64,7 @@ class AirportListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Airport
-        fields = ("name", "closest_big_city",)
+        fields = ("id", "name", "closest_big_city",)
 
 
 class RouteSerializer(serializers.ModelSerializer):
@@ -113,17 +113,17 @@ class FlightListSerializer(serializers.ModelSerializer):
                 "available_tickets": all_tickets - sold_tickets[
             "id__count"]}
 
-# class FlightDetailSerializer(serializers.ModelSerializer):
-#     airplane = serializers.StringRelatedField(many=False, read_only=True)
-#     route = serializers.StringRelatedField(many=False, read_only=True)
-#     crew = serializers.StringRelatedField(many=True, read_only=True)
-#     taken_tickets = serializers.StringRelatedField(many=True, read_only=True)
-#     available_tickets = serializers.SerializerMethodField()
-#
-#     class Meta:
-#         model = Flight
-#         fields = ("id", "route", "airplane", "departure_time",
-#                   "arrival_time", "crew", "taken_tickets", "available_tickets")
+class FlightDetailSerializer(serializers.ModelSerializer):
+    airplane = serializers.StringRelatedField(many=False, read_only=True)
+    route = serializers.StringRelatedField(many=False, read_only=True)
+    crew = serializers.StringRelatedField(many=True, read_only=True)
+    taken_tickets = serializers.StringRelatedField(many=True, read_only=True)
+    available_tickets = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Flight
+        fields = ("id", "airplane", "route", "departure_time",
+                  "arrival_time", "crew", "taken_tickets", "available_tickets")
 
     def get_available_tickets(self, obj):
         available_tickets = []

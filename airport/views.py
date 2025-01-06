@@ -166,16 +166,65 @@ class CrewViewSet(viewsets.ModelViewSet):
 
 
 class FlightViewSet(viewsets.ModelViewSet):
-    queryset = Flight.objects.all().select_related("airplane")
+    queryset = Flight.objects.select_related(
+       "airplane", "route__source", "route__destination"
+    ).prefetch_related("crew", "taken_tickets",)
     serializer_class = FlightSerializer
     permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
 
     def get_serializer_class(self):
-        if self.action in ("list", "retrieve"):
+        if self.action == "list":
             return FlightListSerializer
-        # elif self.action=="retrieve":
-        #     return FlightDetailSerializer
+        elif self.action=="retrieve":
+            return FlightDetailSerializer
         return self.serializer_class
+
+    @staticmethod
+    def split_params(params):
+        return params.split("-")
+
+    def get_queryset(self):
+        queryset = self.queryset
+        for param in self.request.query_params:
+            if param not in ["countries", "cities", "airports"]:
+                continue
+            try:
+                route = self.split_params(self.request.query_params[param])
+                if len(route) != 2:
+                    raise ValidationError(
+                        {
+                            param: f"Parameter {param} must contain "
+                                   f"exactly two values separated by a '-'."
+                        }
+                    )
+                source, destination = route
+                source, destination = source.strip(), destination.strip()
+                if param == "cities":
+                    queryset = queryset.filter(
+                        route__source__closest_big_city__name__iexact=source,
+                        route__destination__closest_big_city__name__iexact
+                        =destination
+                    )
+                elif param == "countries":
+                    queryset = queryset.filter(
+                        route__source__closest_big_city__country__name__iexact
+                        =source,
+                        route_destination__closest_big_city__country__name__iexact=destination
+                    )
+                elif param == "airports":
+                    queryset = queryset.filter(
+                        route__source__id=int(source),
+                        route__destination__id=int(destination)
+                    )
+            except ValueError:
+                raise ValidationError(
+                    {
+                        "airports": "Parameter 'airports' must contain valid integers."}
+                )
+            except Exception as e:
+                raise ValidationError({param: str(e)})
+
+        return queryset
 
 
 

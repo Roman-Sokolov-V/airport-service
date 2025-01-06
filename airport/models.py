@@ -62,7 +62,7 @@ class Route(models.Model):
     distance = models.IntegerField()
 
     def __str__(self):
-        return f"From {self.source} to {self.destination}"
+        return f"From {self.source.name} to {self.destination.name}"
 
 class Crew(models.Model):
     first_name = models.CharField(max_length=100)
