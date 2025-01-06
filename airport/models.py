@@ -4,18 +4,18 @@ from django.db.models import ForeignKey
 from service_config import settings
 
 
-class AirplanType(models.Model):
+class AirplaneType(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.name
 
-class Airplan(models.Model):
+class Airplane(models.Model):
     name = models.CharField(max_length=100)
     rows = models.IntegerField()
     seats_in_row = models.IntegerField()
-    airplan_type = models.ForeignKey(
-        AirplanType, on_delete=models.CASCADE, related_name="airplanes"
+    airplane_type = models.ForeignKey(
+        AirplaneType, on_delete=models.CASCADE, related_name="airplanes"
     )
 
     def __str__(self):
@@ -76,8 +76,8 @@ class Flight(models.Model):
     route = models.ForeignKey(
         Route, on_delete=models.CASCADE, related_name="flights"
     )
-    airplan = models.ForeignKey(
-        Airplan, on_delete=models.CASCADE, related_name="flights"
+    airplane = models.ForeignKey(
+        Airplane, on_delete=models.CASCADE, related_name="flights"
     )
     departure_time = models.DateTimeField()
     arrival_time = models.DateTimeField()
@@ -96,10 +96,15 @@ class Order(models.Model):
 class Ticket(models.Model):
     row = models.IntegerField()
     seat = models.IntegerField()
-    flight = models.ForeignKey(Flight, on_delete=models.CASCADE)
+    flight = models.ForeignKey(
+        Flight, on_delete=models.CASCADE, related_name="taken_tickets"
+    )
     order = models.ForeignKey(
         Order, on_delete=models.CASCADE, related_name="tickets"
     )
+
+    def __str__(self):
+        return f"row:{self.row} seat:{self.seat}"
 
     class Meta:
         unique_together = ("row", "seat", "flight")
@@ -124,9 +129,9 @@ class Ticket(models.Model):
     def clean(self):
         validate_ticket(
             row=self.row,
-            rows=self.flight.airplan.rows,
+            rows=self.flight.airplane.rows,
             seat=self.seat,
-            seats=self.flight.airplan.seats_in_row,
+            seats=self.flight.airplane.seats_in_row,
             error_to_rase=ValueError,
         )
 

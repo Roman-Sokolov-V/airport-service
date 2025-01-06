@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models import Count
 from rest_framework import serializers
 
 from airport.models import *
@@ -7,23 +8,23 @@ from rest_framework.validators import UniqueTogetherValidator
 
 
 
-class AirplanTypeSerializer(serializers.ModelSerializer):
+class AirplaneTypeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = AirplanType
+        model = AirplaneType
         fields = ("id", "name")
 
 
 class AirplaneSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Airplan
-        fields = ("id", "name", "rows", "seats_in_row", "airplan_type")
+        model = Airplane
+        fields = ("id", "name", "rows", "seats_in_row", "airplane_type")
 
 
 class AirplaneListSerializer(serializers.ModelSerializer):
-    airplan_type = serializers.StringRelatedField(many=False, read_only=True)
+    airplane_type = serializers.StringRelatedField(many=False, read_only=True)
     class Meta:
-        model = Airplan
-        fields = ("id", "name", "rows", "seats_in_row", "airplan_type")
+        model = Airplane
+        fields = ("id", "name", "rows", "seats_in_row", "airplane_type")
 
 class CountrySerializer(serializers.ModelSerializer):
     class Meta:
@@ -89,17 +90,50 @@ class CrewSerializer(serializers.ModelSerializer):
 class FlightSerializer(serializers.ModelSerializer):
     class Meta:
         model = Flight
-        fields = ("id", "route", "airplan", "departure_time",
-                  "arrival_time", "crew")
+        fields = (
+            "id", "route", "airplane", "departure_time", "arrival_time", "crew"
+        )
 
 class FlightListSerializer(serializers.ModelSerializer):
-    airplan = serializers.StringRelatedField(many=False, read_only=True)
+    airplane = serializers.StringRelatedField(many=False, read_only=True)
     route = serializers.StringRelatedField(many=False, read_only=True)
+    crew = serializers.StringRelatedField(many=True, read_only=True)
+    tickets = serializers.SerializerMethodField()
 
     class Meta:
         model = Flight
-        fields = ("id", "route", "airplan", "departure_time", "arrival_time",)
+        fields = ("id", "route", "airplane", "departure_time",
+                  "arrival_time", "crew", "tickets")
 
+    def get_tickets(self, obj):
+        all_tickets = obj.airplane.rows * obj.airplane.seats_in_row
+        sold_tickets = Ticket.objects.filter(flight=obj).aggregate(Count("id"))
+        return {"all_tickets": all_tickets, "sold_tickets": sold_tickets[
+            "id__count"],
+                "available_tickets": all_tickets - sold_tickets[
+            "id__count"]}
+
+# class FlightDetailSerializer(serializers.ModelSerializer):
+#     airplane = serializers.StringRelatedField(many=False, read_only=True)
+#     route = serializers.StringRelatedField(many=False, read_only=True)
+#     crew = serializers.StringRelatedField(many=True, read_only=True)
+#     taken_tickets = serializers.StringRelatedField(many=True, read_only=True)
+#     available_tickets = serializers.SerializerMethodField()
+#
+#     class Meta:
+#         model = Flight
+#         fields = ("id", "route", "airplane", "departure_time",
+#                   "arrival_time", "crew", "taken_tickets", "available_tickets")
+
+    def get_available_tickets(self, obj):
+        available_tickets = []
+        taken_tickets = Ticket.objects.filter(flight=obj).values_list(
+            "row", "seat")
+        for row in range(1, obj.airplane.rows + 1):
+            for seat in range(1, obj.airplane.seats_in_row + 1):
+                if (row, seat) not in taken_tickets:
+                    available_tickets.append(f"row:{row} seat:{seat}")
+        return available_tickets
 
 
 class TicketSerializer(serializers.ModelSerializer):
@@ -118,8 +152,8 @@ class TicketSerializer(serializers.ModelSerializer):
         Ticket.validate_ticket(
             row=attrs["row"],
             seat=attrs["seat"],
-            rows=attrs["flight"].airplan.rows,
-            seats=attrs["flight"].airplan.seats_in_row,
+            rows=attrs["flight"].airplane.rows,
+            seats=attrs["flight"].airplane.seats_in_row,
             error_to_rase=serializers.ValidationError
         )
 
