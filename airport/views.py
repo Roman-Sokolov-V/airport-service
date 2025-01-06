@@ -14,7 +14,7 @@ from airport.models import (
     Crew,
     Flight,
     Ticket,
-    Order
+    Order,
 )
 
 from airport.serializers import (
@@ -34,11 +34,12 @@ from airport.serializers import (
     AirportListSerializer,
     CityListSerializer,
     AirplaneListSerializer,
-    CountryListSerializer, FlightListSerializer, FlightDetailSerializer,
+    CountryListSerializer,
+    FlightListSerializer,
+    FlightDetailSerializer,
 )
 
 from airport.permissions import IsAdminAllOrAuthenticatedReadOnly
-
 
 
 class AirplaneTypeViewSet(viewsets.ModelViewSet):
@@ -80,32 +81,27 @@ class CityViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
 
 
-
 class AirportViewSet(viewsets.ModelViewSet):
     queryset = Airport.objects.all().select_related("closest_big_city__country")
     serializer_class = AirportListSerializer
     permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
-
 
     def get_queryset(self):
         queryset = self.queryset
         country = self.request.query_params.get("country")
         city = self.request.query_params.get("city")
         if country:
-            queryset = queryset.filter(
-                closest_big_city__country__name__iexact=country
-            )
+            queryset = queryset.filter(closest_big_city__country__name__iexact=country)
         if city:
-            queryset = queryset.filter(
-                closest_big_city__name__iexact=city
-            )
+            queryset = queryset.filter(closest_big_city__name__iexact=city)
 
         return queryset
 
 
 class RouteViewSet(viewsets.ModelViewSet):
     queryset = Route.objects.all().prefetch_related(
-        "source__closest_big_city__country", "destination__closest_big_city__country")
+        "source__closest_big_city__country", "destination__closest_big_city__country"
+    )
     serializer_class = RouteSerializer
     permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
 
@@ -129,7 +125,7 @@ class RouteViewSet(viewsets.ModelViewSet):
                     raise ValidationError(
                         {
                             param: f"Parameter {param} must contain "
-                                   f"exactly two values separated by a '-'."
+                            f"exactly two values separated by a '-'."
                         }
                     )
                 source, destination = route
@@ -137,17 +133,16 @@ class RouteViewSet(viewsets.ModelViewSet):
                 if param == "cities":
                     queryset = queryset.filter(
                         source__closest_big_city__name__iexact=source,
-                        destination__closest_big_city__name__iexact=destination
+                        destination__closest_big_city__name__iexact=destination,
                     )
                 elif param == "countries":
                     queryset = queryset.filter(
                         source__closest_big_city__country__name__iexact=source,
-                        destination__closest_big_city__country__name__iexact=destination
+                        destination__closest_big_city__country__name__iexact=destination,
                     )
                 elif param == "airports":
                     queryset = queryset.filter(
-                        source__id=int(source),
-                        destination__id=int(destination)
+                        source__id=int(source), destination__id=int(destination)
                     )
             except ValueError:
                 raise ValidationError(
@@ -159,27 +154,28 @@ class RouteViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-
 class CrewViewSet(viewsets.ModelViewSet):
     queryset = Crew.objects.all()
     serializer_class = CrewSerializer
     permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
 
 
-
 class FlightViewSet(viewsets.ModelViewSet):
-    queryset = Flight.objects.select_related(
-       "airplane", "route__source", "route__destination"
-    ).prefetch_related("crew", "taken_tickets",).annotate(
-        num_taken_tickets=Count(
-        "taken_tickets"))
+    queryset = (
+        Flight.objects.select_related("airplane", "route__source", "route__destination")
+        .prefetch_related(
+            "crew",
+            "taken_tickets",
+        )
+        .annotate(num_taken_tickets=Count("taken_tickets"))
+    )
     serializer_class = FlightSerializer
     permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
 
     def get_serializer_class(self):
         if self.action == "list":
             return FlightListSerializer
-        elif self.action=="retrieve":
+        elif self.action == "retrieve":
             return FlightDetailSerializer
         return self.serializer_class
 
@@ -198,7 +194,7 @@ class FlightViewSet(viewsets.ModelViewSet):
                     raise ValidationError(
                         {
                             param: f"Parameter {param} must contain "
-                                   f"exactly two values separated by a '-'."
+                            f"exactly two values separated by a '-'."
                         }
                     )
                 source, destination = route
@@ -206,24 +202,21 @@ class FlightViewSet(viewsets.ModelViewSet):
                 if param == "cities":
                     queryset = queryset.filter(
                         route__source__closest_big_city__name__iexact=source,
-                        route__destination__closest_big_city__name__iexact
-                        =destination
+                        route__destination__closest_big_city__name__iexact=destination,
                     )
                 elif param == "countries":
                     queryset = queryset.filter(
-                        route__source__closest_big_city__country__name__iexact
-                        =source,
-                        route_destination__closest_big_city__country__name__iexact=destination
+                        route__source__closest_big_city__country__name__iexact=source,
+                        route_destination__closest_big_city__country__name__iexact=destination,
                     )
                 elif param == "airports":
                     queryset = queryset.filter(
                         route__source__id=int(source),
-                        route__destination__id=int(destination)
+                        route__destination__id=int(destination),
                     )
             except ValueError:
                 raise ValidationError(
-                    {
-                        "airports": "Parameter 'airports' must contain valid integers."}
+                    {"airports": "Parameter 'airports' must contain valid integers."}
                 )
             except Exception as e:
                 raise ValidationError({param: str(e)})
@@ -231,10 +224,9 @@ class FlightViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all().prefetch_related(
-    "tickets__flight__route__source",
+        "tickets__flight__route__source",
         "tickets__flight__route__destination",
         "tickets__flight__airplane",
     )

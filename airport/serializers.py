@@ -6,8 +6,6 @@ from airport.models import *
 from rest_framework.validators import UniqueTogetherValidator
 
 
-
-
 class AirplaneTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = AirplaneType
@@ -22,21 +20,24 @@ class AirplaneSerializer(serializers.ModelSerializer):
 
 class AirplaneListSerializer(serializers.ModelSerializer):
     airplane_type = serializers.StringRelatedField(many=False, read_only=True)
+
     class Meta:
         model = Airplane
         fields = ("id", "name", "rows", "seats_in_row", "airplane_type")
+
 
 class CountrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Country
         fields = ("id", "name")
 
+
 class CountryListSerializer(serializers.ModelSerializer):
     cities = serializers.StringRelatedField(many=True, read_only=True)
+
     class Meta:
         model = Country
         fields = ("id", "name", "cities")
-
 
 
 class CitySerializer(serializers.ModelSerializer):
@@ -56,7 +57,11 @@ class CityListSerializer(serializers.ModelSerializer):
 class AirportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Airport
-        fields = ("id", "name", "closest_big_city",)
+        fields = (
+            "id",
+            "name",
+            "closest_big_city",
+        )
 
 
 class AirportListSerializer(serializers.ModelSerializer):
@@ -64,13 +69,23 @@ class AirportListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Airport
-        fields = ("id", "name", "closest_big_city",)
+        fields = (
+            "id",
+            "name",
+            "closest_big_city",
+        )
 
 
 class RouteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Route
-        fields = ("id", "source", "destination", "distance",)
+        fields = (
+            "id",
+            "source",
+            "destination",
+            "distance",
+        )
+
 
 class RouteListSerializer(serializers.ModelSerializer):
     source = AirportListSerializer(many=False, read_only=True)
@@ -78,7 +93,11 @@ class RouteListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Route
-        fields = ("source", "destination", "distance",)
+        fields = (
+            "source",
+            "destination",
+            "distance",
+        )
 
 
 class CrewSerializer(serializers.ModelSerializer):
@@ -90,9 +109,8 @@ class CrewSerializer(serializers.ModelSerializer):
 class FlightSerializer(serializers.ModelSerializer):
     class Meta:
         model = Flight
-        fields = (
-            "id", "route", "airplane", "departure_time", "arrival_time", "crew"
-        )
+        fields = ("id", "route", "airplane", "departure_time", "arrival_time", "crew")
+
 
 class FlightListSerializer(serializers.ModelSerializer):
     airplane = serializers.StringRelatedField(many=False, read_only=True)
@@ -101,16 +119,23 @@ class FlightListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Flight
-        fields = ("id", "route", "airplane", "departure_time",
-                  "arrival_time", "tickets")
+        fields = (
+            "id",
+            "route",
+            "airplane",
+            "departure_time",
+            "arrival_time",
+            "tickets",
+        )
 
     def get_tickets(self, obj):
         all_tickets = obj.airplane.rows * obj.airplane.seats_in_row
         return {
             "all_tickets": all_tickets,
             "taken_tickets": obj.num_taken_tickets,
-            "available_tickets": all_tickets - obj.num_taken_tickets
+            "available_tickets": all_tickets - obj.num_taken_tickets,
         }
+
 
 class FlightDetailSerializer(serializers.ModelSerializer):
     airplane = serializers.StringRelatedField(many=False, read_only=True)
@@ -121,13 +146,20 @@ class FlightDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Flight
-        fields = ("id", "airplane", "route", "departure_time",
-                  "arrival_time", "crew", "taken_tickets", "available_tickets")
+        fields = (
+            "id",
+            "airplane",
+            "route",
+            "departure_time",
+            "arrival_time",
+            "crew",
+            "taken_tickets",
+            "available_tickets",
+        )
 
     def get_available_tickets(self, obj):
         available_tickets = []
-        taken_tickets = Ticket.objects.filter(flight=obj).values_list(
-            "row", "seat")
+        taken_tickets = Ticket.objects.filter(flight=obj).values_list("row", "seat")
         for row in range(1, obj.airplane.rows + 1):
             for seat in range(1, obj.airplane.seats_in_row + 1):
                 if (row, seat) not in taken_tickets:
@@ -144,7 +176,6 @@ class TicketSerializer(serializers.ModelSerializer):
                 queryset=Ticket.objects.all(),
                 fields=("row", "seat", "flight"),
             ),
-
         ]
 
     def validate(self, attrs):
@@ -153,8 +184,9 @@ class TicketSerializer(serializers.ModelSerializer):
             seat=attrs["seat"],
             rows=attrs["flight"].airplane.rows,
             seats=attrs["flight"].airplane.seats_in_row,
-            error_to_rase=serializers.ValidationError
+            error_to_rase=serializers.ValidationError,
         )
+
 
 class TicketListSerializer(serializers.ModelSerializer):
     flight = FlightListSerializer(many=False, read_only=True)
@@ -163,8 +195,10 @@ class TicketListSerializer(serializers.ModelSerializer):
         model = Ticket
         fields = ("id", "row", "seat", "flight")
 
+
 class OrderListSerializer(serializers.ModelSerializer):
     tickets = TicketListSerializer(many=True, read_only=True)
+
     class Meta:
         model = Order
         fields = ("id", "created", "tickets")
@@ -173,12 +207,9 @@ class OrderListSerializer(serializers.ModelSerializer):
 class OrderCreateSerializer(serializers.ModelSerializer):
     tickets = TicketSerializer(many=True, read_only=False, allow_empty=False)
 
-
     class Meta:
         model = Order
         fields = ("id", "created", "tickets")
-
-
 
     def create(self, validated_data):
         with transaction.atomic():
@@ -187,4 +218,3 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             for ticket_data in tickets_data:
                 order.tickets.add(Ticket.objects.create(order=order, **ticket_data))
             return order
-
