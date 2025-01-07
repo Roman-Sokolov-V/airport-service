@@ -5,6 +5,9 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.exceptions import ValidationError
 
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
+from drf_spectacular.types import OpenApiTypes
+
 from airport.models import (
     AirplaneType,
     Airplane,
@@ -44,6 +47,7 @@ from airport.permissions import IsAdminAllOrAuthenticatedReadOnly
 
 
 class AirplaneTypeViewSet(viewsets.ModelViewSet):
+    """Endpoint for airplane types"""
     queryset = AirplaneType.objects.all()
     serializer_class = AirplaneTypeSerializer
 
@@ -55,6 +59,7 @@ class AirplaneTypeViewSet(viewsets.ModelViewSet):
 
 
 class AirplaneViewSet(viewsets.ModelViewSet):
+    """Endpoint for airplanes"""
     queryset = Airplane.objects.select_related("airplane_type")
     serializer_class = AirplaneSerializer
     permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
@@ -66,6 +71,7 @@ class AirplaneViewSet(viewsets.ModelViewSet):
 
 
 class CountryViewSet(viewsets.ModelViewSet):
+    """Endpoint for countries"""
     queryset = Country.objects.all()
     serializer_class = CountrySerializer
     permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
@@ -77,12 +83,15 @@ class CountryViewSet(viewsets.ModelViewSet):
 
 
 class CityViewSet(viewsets.ModelViewSet):
+    """Endpoint for cities"""
     queryset = City.objects.all()
     serializer_class = CityListSerializer
     permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
 
 
+
 class AirportViewSet(viewsets.ModelViewSet):
+    """Endpoint for airports"""
     queryset = Airport.objects.all().select_related("closest_big_city__country")
     serializer_class = AirportListSerializer
     permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
@@ -92,14 +101,29 @@ class AirportViewSet(viewsets.ModelViewSet):
         country = self.request.query_params.get("country")
         city = self.request.query_params.get("city")
         if country:
-            queryset = queryset.filter(closest_big_city__country__name__iexact=country)
+            queryset = queryset.filter(
+                closest_big_city__country__name__icontains=country)
         if city:
-            queryset = queryset.filter(closest_big_city__name__iexact=city)
+            queryset = queryset.filter(closest_big_city__name__icontains=city)
 
         return queryset
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="location",
+                type=OpenApiTypes.STR,
+                description="Filter by city or/and country ("
+                            "example/?city=paris&country=france)",
+            )
+        ]
+    )
+    def list(self, request):
+        """Get list of all Airports."""
+        return super().list(request, *self.args, **self.kwargs)
 
 
 class RouteViewSet(viewsets.ModelViewSet):
+    """Endpoint for routes"""
     queryset = Route.objects.all().prefetch_related(
         "source__closest_big_city__country", "destination__closest_big_city__country"
     )
@@ -154,37 +178,42 @@ class RouteViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="source-destination",
+                type=OpenApiTypes.STR,
+                description="Filter by route, city-city or country-country "
+                            "or id_airport-id_airport("
+                            "example_1/?cities=paris-london "
+                            "example_2/?countries=france-ukraine"
+                            "example_3/?airports=1-5)",
+            )
+        ]
+    )
+    def list(self, request):
+        """Get list of routs."""
+        return super().list(request, *self.args, **self.kwargs)
+
 
 class CrewViewSet(viewsets.ModelViewSet):
+    """Endpoint for crews"""
     queryset = Crew.objects.all()
     serializer_class = CrewSerializer
     permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
 
 
 class FlightViewSet(viewsets.ModelViewSet):
+    """Endpoint for flights"""
     queryset = (
-        Flight.objects.select_related("airplane",
-                                      "route__source",
-                                      "route__destination")
-        .prefetch_related(
+        Flight.objects.select_related(
+            "airplane",
+            "route"
+        ).prefetch_related(
             "crew",
             "taken_tickets",
         )
-        .annotate(num_taken_tickets=Count("taken_tickets"),
-                  # route_name=Concat(
-                  #     Value("From "),
-                  #     F("route__source__name"),
-                  #     F('route__source__closest_big_city__name'),
-                  #     Value(" ("),
-                  #     F("route__source__closest_big_city__country__name"),
-                  #     Value(") to "),
-                  #     F("route__destination__name"),
-                  #     F('route__destination__closest_big_city__name'),
-                  #     Value(" ("),
-                  #     F("route__destination__closest_big_city__country__name"),
-                  #     Value(")"),
-                  # )
-                  )
+        .annotate(num_taken_tickets=Count("taken_tickets"))
     )
 
     serializer_class = FlightSerializer
@@ -241,8 +270,26 @@ class FlightViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="source-destination",
+                type=OpenApiTypes.STR,
+                description="Filter by route, city-city or country-country "
+                            "or id_airport-id_airport("
+                            "example_1/?cities=paris-london "
+                            "example_2/?countries=france-ukraine"
+                            "example_3/?airports=1-5)",
+            )
+        ]
+    )
+    def list(self, request):
+        """Get list of flights."""
+        return super().list(request, *self.args, **self.kwargs)
+
 
 class OrderViewSet(viewsets.ModelViewSet):
+    """Endpoint for orders"""
     queryset = Order.objects.all().prefetch_related(
         "tickets__flight__route__source",
         "tickets__flight__route__destination",
