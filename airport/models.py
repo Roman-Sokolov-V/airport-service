@@ -60,9 +60,24 @@ class Route(models.Model):
         Airport, on_delete=models.CASCADE, related_name="routes_to"
     )
     distance = models.IntegerField()
+    route_description = models.CharField(max_length=255, blank=True)
+
+    # def __str__(self):
+    #     return f"From {self.source.name} to {self.destination.name}"
+
+    def save(self, *args, **kwargs):
+        self.route_description = (
+            f"From {self.source.name} ({self.source.closest_big_city.name} / "
+            f"{self.source.closest_big_city.country.name})"
+            f" to {self.destination.name} ({self.destination.closest_big_city.name}"
+            f" / {self.destination.closest_big_city.country.name})"
+        )
+        super().save(*args, **kwargs)
+
 
     def __str__(self):
-        return f"From {self.source.name} to {self.destination.name}"
+        return self.route_description
+
 
 class Crew(models.Model):
     first_name = models.CharField(max_length=100)

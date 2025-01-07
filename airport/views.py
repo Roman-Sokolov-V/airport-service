@@ -1,4 +1,5 @@
-from django.db.models import Count
+from django.db.models import Count, F, Value
+from django.db.models.functions import Concat
 
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -162,13 +163,30 @@ class CrewViewSet(viewsets.ModelViewSet):
 
 class FlightViewSet(viewsets.ModelViewSet):
     queryset = (
-        Flight.objects.select_related("airplane", "route__source", "route__destination")
+        Flight.objects.select_related("airplane",
+                                      "route__source",
+                                      "route__destination")
         .prefetch_related(
             "crew",
             "taken_tickets",
         )
-        .annotate(num_taken_tickets=Count("taken_tickets"))
+        .annotate(num_taken_tickets=Count("taken_tickets"),
+                  # route_name=Concat(
+                  #     Value("From "),
+                  #     F("route__source__name"),
+                  #     F('route__source__closest_big_city__name'),
+                  #     Value(" ("),
+                  #     F("route__source__closest_big_city__country__name"),
+                  #     Value(") to "),
+                  #     F("route__destination__name"),
+                  #     F('route__destination__closest_big_city__name'),
+                  #     Value(" ("),
+                  #     F("route__destination__closest_big_city__country__name"),
+                  #     Value(")"),
+                  # )
+                  )
     )
+
     serializer_class = FlightSerializer
     permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
 
