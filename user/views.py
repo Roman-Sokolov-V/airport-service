@@ -1,13 +1,15 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import render
 
-from user.serializers import UserSerializer
 from rest_framework import generics
+from rest_framework.permissions import AllowAny
 
+from user.serializers import UserSerializer
 
 class CreateUserView(generics.CreateAPIView):
     """Endpoint for creating a new user."""
     serializer_class = UserSerializer
+    permission_classes = (AllowAny,)
 
 
 class RetrieveUserView(generics.RetrieveAPIView):

@@ -2,7 +2,7 @@ from django.db.models import Count, F, Value
 from django.db.models.functions import Concat
 
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
@@ -43,26 +43,19 @@ from airport.serializers import (
     FlightDetailSerializer,
 )
 
-from airport.permissions import IsAdminAllOrAuthenticatedReadOnly
-
 
 class AirplaneTypeViewSet(viewsets.ModelViewSet):
     """Endpoint for airplane types"""
+
     queryset = AirplaneType.objects.all()
     serializer_class = AirplaneTypeSerializer
-
-    def get_permissions(self):
-        if self.action in ("list", "retrieve"):
-            return (IsAuthenticated(),)
-        else:
-            return (IsAdminUser(),)
 
 
 class AirplaneViewSet(viewsets.ModelViewSet):
     """Endpoint for airplanes"""
+
     queryset = Airplane.objects.select_related("airplane_type")
     serializer_class = AirplaneSerializer
-    permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
 
     def get_serializer_class(self):
         if self.action in ("list", "retrieve"):
@@ -72,9 +65,9 @@ class AirplaneViewSet(viewsets.ModelViewSet):
 
 class CountryViewSet(viewsets.ModelViewSet):
     """Endpoint for countries"""
+
     queryset = Country.objects.all()
     serializer_class = CountrySerializer
-    permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
 
     def get_serializer_class(self):
         if self.action in ("list", "retrieve"):
@@ -84,17 +77,16 @@ class CountryViewSet(viewsets.ModelViewSet):
 
 class CityViewSet(viewsets.ModelViewSet):
     """Endpoint for cities"""
+
     queryset = City.objects.all()
     serializer_class = CityListSerializer
-    permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
-
 
 
 class AirportViewSet(viewsets.ModelViewSet):
     """Endpoint for airports"""
+
     queryset = Airport.objects.all().select_related("closest_big_city__country")
     serializer_class = AirportListSerializer
-    permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
 
     def get_queryset(self):
         queryset = self.queryset
@@ -102,18 +94,20 @@ class AirportViewSet(viewsets.ModelViewSet):
         city = self.request.query_params.get("city")
         if country:
             queryset = queryset.filter(
-                closest_big_city__country__name__icontains=country)
+                closest_big_city__country__name__icontains=country
+            )
         if city:
             queryset = queryset.filter(closest_big_city__name__icontains=city)
 
         return queryset
+
     @extend_schema(
         parameters=[
             OpenApiParameter(
                 name="location",
                 type=OpenApiTypes.STR,
                 description="Filter by city or/and country ("
-                            "example/?city=paris&country=france)",
+                "example/?city=paris&country=france)",
             )
         ]
     )
@@ -124,11 +118,11 @@ class AirportViewSet(viewsets.ModelViewSet):
 
 class RouteViewSet(viewsets.ModelViewSet):
     """Endpoint for routes"""
+
     queryset = Route.objects.all().prefetch_related(
         "source__closest_big_city__country", "destination__closest_big_city__country"
     )
     serializer_class = RouteSerializer
-    permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
 
     def get_serializer_class(self):
         if self.action in ("list", "retrieve"):
@@ -184,10 +178,10 @@ class RouteViewSet(viewsets.ModelViewSet):
                 name="source-destination",
                 type=OpenApiTypes.STR,
                 description="Filter by route, city-city or country-country "
-                            "or id_airport-id_airport("
-                            "example_1/?cities=paris-london "
-                            "example_2/?countries=france-ukraine"
-                            "example_3/?airports=1-5)",
+                "or id_airport-id_airport("
+                "example_1/?cities=paris-london "
+                "example_2/?countries=france-ukraine"
+                "example_3/?airports=1-5)",
             )
         ]
     )
@@ -198,18 +192,17 @@ class RouteViewSet(viewsets.ModelViewSet):
 
 class CrewViewSet(viewsets.ModelViewSet):
     """Endpoint for crews"""
+
     queryset = Crew.objects.all()
     serializer_class = CrewSerializer
-    permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
 
 
 class FlightViewSet(viewsets.ModelViewSet):
     """Endpoint for flights"""
+
     queryset = (
-        Flight.objects.select_related(
-            "airplane",
-            "route"
-        ).prefetch_related(
+        Flight.objects.select_related("airplane", "route")
+        .prefetch_related(
             "crew",
             "taken_tickets",
         )
@@ -217,7 +210,6 @@ class FlightViewSet(viewsets.ModelViewSet):
     )
 
     serializer_class = FlightSerializer
-    permission_classes = (IsAdminAllOrAuthenticatedReadOnly,)
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -276,10 +268,10 @@ class FlightViewSet(viewsets.ModelViewSet):
                 name="source-destination",
                 type=OpenApiTypes.STR,
                 description="Filter by route, city-city or country-country "
-                            "or id_airport-id_airport("
-                            "example_1/?cities=paris-london "
-                            "example_2/?countries=france-ukraine"
-                            "example_3/?airports=1-5)",
+                "or id_airport-id_airport("
+                "example_1/?cities=paris-london "
+                "example_2/?countries=france-ukraine"
+                "example_3/?airports=1-5)",
             )
         ]
     )
@@ -290,6 +282,7 @@ class FlightViewSet(viewsets.ModelViewSet):
 
 class OrderViewSet(viewsets.ModelViewSet):
     """Endpoint for orders"""
+
     queryset = Order.objects.all().prefetch_related(
         "tickets__flight__route__source",
         "tickets__flight__route__destination",

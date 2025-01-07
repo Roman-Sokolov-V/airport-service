@@ -10,6 +10,7 @@ class AirplaneType(models.Model):
     def __str__(self):
         return self.name
 
+
 class Airplane(models.Model):
     name = models.CharField(max_length=100)
     rows = models.IntegerField()
@@ -34,6 +35,7 @@ class City(models.Model):
     country = models.ForeignKey(
         Country, on_delete=models.CASCADE, related_name="cities"
     )
+
     def __str__(self):
         return self.name
 
@@ -41,8 +43,7 @@ class City(models.Model):
 class Airport(models.Model):
     name = models.CharField(max_length=100)
     closest_big_city = ForeignKey(
-        City, on_delete=models.CASCADE,
-        related_name="airports"
+        City, on_delete=models.CASCADE, related_name="airports"
     )
 
     class Meta:
@@ -74,7 +75,6 @@ class Route(models.Model):
         )
         super().save(*args, **kwargs)
 
-
     def __str__(self):
         return self.route_description
 
@@ -87,10 +87,9 @@ class Crew(models.Model):
     def __str__(self):
         return f"{self.position} - {self.first_name} {self.last_name}"
 
+
 class Flight(models.Model):
-    route = models.ForeignKey(
-        Route, on_delete=models.CASCADE, related_name="flights"
-    )
+    route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name="flights")
     airplane = models.ForeignKey(
         Airplane, on_delete=models.CASCADE, related_name="flights"
     )
@@ -102,10 +101,7 @@ class Flight(models.Model):
 class Order(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-
-        related_name="orders"
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orders"
     )
 
 
@@ -115,9 +111,7 @@ class Ticket(models.Model):
     flight = models.ForeignKey(
         Flight, on_delete=models.CASCADE, related_name="taken_tickets"
     )
-    order = models.ForeignKey(
-        Order, on_delete=models.CASCADE, related_name="tickets"
-    )
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="tickets")
 
     def __str__(self):
         return f"row:{self.row} seat:{self.seat}"
@@ -128,19 +122,9 @@ class Ticket(models.Model):
     @staticmethod
     def validate_ticket(row: int, rows: int, seat: int, seats: int, error_to_rase):
         if not (1 <= row <= rows):
-            raise error_to_rase(
-                {
-                    "row": f"row must be in range [1, {rows}]"
-                }
-            )
+            raise error_to_rase({"row": f"row must be in range [1, {rows}]"})
         if not (1 <= seat <= seats):
-            raise error_to_rase(
-                {
-                    "seat": f"seat must be in range "
-                            f"[1, {seats}]"
-                }
-            )
-
+            raise error_to_rase({"seat": f"seat must be in range " f"[1, {seats}]"})
 
     def clean(self):
         validate_ticket(
@@ -153,10 +137,10 @@ class Ticket(models.Model):
 
     def save(
         self,
-        force_insert = False,
-        force_update = False,
-        using = None,
-        update_fields = None,
+        force_insert=False,
+        force_update=False,
+        using=None,
+        update_fields=None,
     ):
         self.full_clean()
         super().save(

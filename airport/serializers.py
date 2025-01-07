@@ -112,6 +112,21 @@ class FlightSerializer(serializers.ModelSerializer):
         fields = ("id", "route", "airplane", "departure_time", "arrival_time", "crew")
 
 
+class FlightOrderSerializer(serializers.ModelSerializer):
+    airplane = serializers.StringRelatedField(many=False, read_only=True)
+    route = serializers.StringRelatedField(many=False, read_only=True)
+
+    class Meta:
+        model = Flight
+        fields = (
+            "id",
+            "route",
+            "airplane",
+            "departure_time",
+            "arrival_time",
+        )
+
+
 class FlightListSerializer(serializers.ModelSerializer):
     airplane = serializers.StringRelatedField(many=False, read_only=True)
     route = serializers.StringRelatedField(many=False, read_only=True)
@@ -126,7 +141,6 @@ class FlightListSerializer(serializers.ModelSerializer):
             "departure_time",
             "arrival_time",
             "tickets",
-
         )
 
     def get_tickets(self, obj):
@@ -190,7 +204,7 @@ class TicketSerializer(serializers.ModelSerializer):
 
 
 class TicketListSerializer(serializers.ModelSerializer):
-    flight = FlightListSerializer(many=False, read_only=True)
+    flight = FlightOrderSerializer(many=False, read_only=True)
 
     class Meta:
         model = Ticket
