@@ -1,7 +1,7 @@
 from django.db.models import Count, F, Value
 from django.db.models.functions import Concat
 
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
@@ -151,13 +151,13 @@ class RouteViewSet(viewsets.ModelViewSet):
                 source, destination = source.strip(), destination.strip()
                 if param == "cities":
                     queryset = queryset.filter(
-                        source__closest_big_city__name__iexact=source,
-                        destination__closest_big_city__name__iexact=destination,
+                        source__closest_big_city__name__icontains=source,
+                        destination__closest_big_city__name__icontains=destination,
                     )
                 elif param == "countries":
                     queryset = queryset.filter(
-                        source__closest_big_city__country__name__iexact=source,
-                        destination__closest_big_city__country__name__iexact=destination,
+                        source__closest_big_city__country__name__icontains=source,
+                        destination__closest_big_city__country__name__icontains=destination,
                     )
                 elif param == "airports":
                     queryset = queryset.filter(
@@ -240,13 +240,15 @@ class FlightViewSet(viewsets.ModelViewSet):
                 source, destination = source.strip(), destination.strip()
                 if param == "cities":
                     queryset = queryset.filter(
-                        route__source__closest_big_city__name__iexact=source,
-                        route__destination__closest_big_city__name__iexact=destination,
+                        route__source__closest_big_city__name__icontains
+                        =source,
+                        route__destination__closest_big_city__name__icontains
+                        =destination,
                     )
                 elif param == "countries":
                     queryset = queryset.filter(
-                        route__source__closest_big_city__country__name__iexact=source,
-                        route_destination__closest_big_city__country__name__iexact=destination,
+                        route__source__closest_big_city__country__name__icontains=source,
+                        route__destination__closest_big_city__country__name__icontains=destination,
                     )
                 elif param == "airports":
                     queryset = queryset.filter(
@@ -280,7 +282,12 @@ class FlightViewSet(viewsets.ModelViewSet):
         return super().list(request, *self.args, **self.kwargs)
 
 
-class OrderViewSet(viewsets.ModelViewSet):
+class OrderViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet
+):
     """Endpoint for orders"""
 
     queryset = Order.objects.all().prefetch_related(

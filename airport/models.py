@@ -63,8 +63,8 @@ class Route(models.Model):
     distance = models.IntegerField()
     route_description = models.CharField(max_length=255, blank=True)
 
-    # def __str__(self):
-    #     return f"From {self.source.name} to {self.destination.name}"
+    def __str__(self):
+        return f"From {self.source.name} to {self.destination.name}"
 
     def save(self, *args, **kwargs):
         self.route_description = (
@@ -75,8 +75,8 @@ class Route(models.Model):
         )
         super().save(*args, **kwargs)
 
-    def __str__(self):
-        return self.route_description
+    # def __str__(self):
+    #     return self.route_description
 
 
 class Crew(models.Model):
@@ -127,7 +127,7 @@ class Ticket(models.Model):
             raise error_to_rase({"seat": f"seat must be in range " f"[1, {seats}]"})
 
     def clean(self):
-        validate_ticket(
+        self.validate_ticket(
             row=self.row,
             rows=self.flight.airplane.rows,
             seat=self.seat,
