@@ -43,6 +43,7 @@ def create_auth_user():
         password="<PASSWORD>",
         first_name="Test",
         last_name="User",
+        is_staff=True,
     )
 
 def sample_airplane_type(**params) -> AirplaneType:
@@ -142,8 +143,10 @@ class AirplaneTypeTests(TestCase):
 
     def test_post_airplane_type(self):
         data = {"name": "big airplane"}
-        response = self.client.post(BASE_URL + "airplane-type/", data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.post(BASE_URL + "airplane-type/", data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(AirplaneType.objects.filter(name=data["name"]).exists())
+        self.assertEqual(len(AirplaneType.objects.all()), 2)
 
     def test_retrive_airplane_type(self):
         response = self.client.get(BASE_URL + "airplane-type/1/")
@@ -154,13 +157,17 @@ class AirplaneTypeTests(TestCase):
 
     def test_put_airplane_type(self):
         data = {"name": "big airplane"}
-        response = self.client.put(BASE_URL + "airplane-type/1/", data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.put(BASE_URL + "airplane-type/1/", data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(AirplaneType.objects.filter(name=data["name"]).exists())
+        self.assertEqual(len(AirplaneType.objects.all()), 1)
 
     def test_putch_airplane_type(self):
         data = {"name": "big airplane"}
-        response = self.client.patch(BASE_URL + "airplane-type/1/", data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.patch(BASE_URL + "airplane-type/1/", data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(AirplaneType.objects.filter(name=data["name"]).exists())
+        self.assertEqual(len(AirplaneType.objects.all()), 1)
 
 ############################################################
 class AirplaneTests(TestCase):
@@ -178,12 +185,21 @@ class AirplaneTests(TestCase):
         self.assertEqual(response.data["results"], serializer.data)
 
     def test_post_airplane(self):
-        data = {"name": "New plane",
-        "rows": 20,
-        "seats_in_row": 4,
-        "airplane_type": 1}
-        response = self.client.post(BASE_URL + "airplane/", data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        data = {
+            "name": "New plane",
+            "rows": 20,
+            "seats_in_row": 4,
+            "airplane_type": 1
+        }
+        response = self.client.post(BASE_URL + "airplane/", data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Airplane.objects.filter(
+            name=data["name"],
+            rows=data["rows"],
+            seats_in_row=data["seats_in_row"],
+            airplane_type=data["airplane_type"]
+        ).exists())
+        self.assertEqual(len(Airplane.objects.all()), 2)
 
     def test_retrive_airplane(self):
         response = self.client.get(BASE_URL + "airplane/1/")
@@ -192,17 +208,30 @@ class AirplaneTests(TestCase):
         self.assertEqual(response.data, serializer.data)
 
     def test_put_airplane(self):
-        data = {"name": "New plane",
-                "rows": 20,
-                "seats_in_row": 4,
-                "airplane_type": 1}
-        response = self.client.put(BASE_URL + "airplane/1/", data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        data = {
+            "name": "New plane",
+            "rows": 20,
+            "seats_in_row": 4,
+            "airplane_type": 1
+        }
+        response = self.client.put(BASE_URL + "airplane/1/", data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(Airplane.objects.filter(
+            name=data["name"],
+            rows=data["rows"],
+            seats_in_row=data["seats_in_row"],
+            airplane_type=data["airplane_type"]
+        ).exists())
+        self.assertEqual(len(Airplane.objects.all()), 1)
 
     def test_putch_airplane(self):
         data = {"name": "big airplane"}
-        response = self.client.patch(BASE_URL + "airplane/1/", data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.patch(BASE_URL + "airplane/1/", data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(Airplane.objects.filter(
+            name=data["name"],
+        ))
+        self.assertEqual(len(Airplane.objects.all()), 1)
 
 ############################################################
 class CountryTests(TestCase):
@@ -225,8 +254,10 @@ class CountryTests(TestCase):
 
     def test_post_country(self):
         data = {"name": "United country of Eirth"}
-        response = self.client.post(self.list_url, data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.post(self.list_url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Country.objects.filter(name=data["name"]).exists())
+        self.assertEqual(len(Country.objects.all()), 2)
 
     def test_retrive_country(self):
         response = self.client.get(self.detail_url)
@@ -236,13 +267,17 @@ class CountryTests(TestCase):
 
     def test_put_country(self):
         data = {"name": "New"}
-        response = self.client.put(self.detail_url, data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.put(self.detail_url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(Country.objects.filter(name=data["name"]).exists())
+        self.assertEqual(len(Country.objects.all()), 1)
 
     def test_putch_country(self):
-        data = {"name": "Best"}
-        response = self.client.patch(self.detail_url, data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        data = {"name": "Neverland"}
+        response = self.client.patch(self.detail_url, data,)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(Country.objects.filter(name=data["name"]).exists())
+        self.assertEqual(len(Country.objects.all()), 1)
 
 ############################################################
 class CityTests(TestCase):
@@ -266,8 +301,10 @@ class CityTests(TestCase):
 
     def test_post_city(self):
         data = {"name":"Just city", "country": self.country.id}
-        response = self.client.post(self.list_url, data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.post(self.list_url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(City.objects.filter(name=data["name"]).exists())
+        self.assertEqual(len(City.objects.all()), 2)
 
     def test_retrive_city(self):
         response = self.client.get(self.detail_url)
@@ -277,13 +314,17 @@ class CityTests(TestCase):
 
     def test_put_country(self):
         data = {"name":"Just city", "country": self.country.id}
-        response = self.client.put(self.detail_url, data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.put(self.detail_url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(City.objects.filter(name=data["name"]).exists())
+        self.assertEqual(len(City.objects.all()), 1)
 
     def test_putch_country(self):
-        data = {"name": "UUUS"}
-        response = self.client.patch(self.detail_url, data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        data = {"name": "USSU"}
+        response = self.client.patch(self.detail_url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(City.objects.filter(name=data["name"]).exists())
+        self.assertEqual(len(City.objects.all()), 1)
 
 ############################################################
 class AirportTests(TestCase):
@@ -307,8 +348,10 @@ class AirportTests(TestCase):
 
     def test_post_airport(self):
         data = {"name":"UWR", "closest_big_city": self.city.pk}
-        response = self.client.post(self.list_url, data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.post(self.list_url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Airport.objects.filter(name=data["name"]).exists())
+        self.assertEqual(len(Airport.objects.all()), 2)
 
     def test_retrive_airport(self):
         response = self.client.get(self.detail_url)
@@ -319,12 +362,16 @@ class AirportTests(TestCase):
     def test_put_airport(self):
         data = {"name":"UWR", "closest_big_city": self.city.pk}
         response = self.client.put(self.detail_url, data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(Airport.objects.filter(name=data["name"]).exists())
+        self.assertEqual(len(Airport.objects.all()), 1)
 
     def test_putch_airport(self):
         data = {"name": "RED"}
         response = self.client.patch(self.detail_url, data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(Airport.objects.filter(name=data["name"]).exists())
+        self.assertEqual(len(Airport.objects.all()), 1)
 
 
 ############################################################
@@ -380,10 +427,17 @@ class RouteTests(TestCase):
         data = {
             "source": 2,
             "destination": 1,
-            "distance": 2000
+            "distance": 20000
         }
-        response = self.client.post(self.list_url, data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.post(self.list_url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Route.objects.filter(
+            source__id=data["source"],
+            destination__id=data["destination"],
+            distance=data["distance"]
+        ).exists())
+        self.assertEqual(len(Route.objects.all()), 5)
+
 
     def test_retrive_route(self):
         response = self.client.get(self.detail_url)
@@ -393,17 +447,26 @@ class RouteTests(TestCase):
 
     def test_put_route(self):
         data = {
-            "source": 2,
-            "destination": 3,
-            "distance": 2000
+            "source": 3,
+            "destination": 4,
+            "distance": 100
         }
         response = self.client.put(self.detail_url, data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(Route.objects.filter(
+            source__id=data["source"],
+            destination__id=data["destination"],
+            distance=data["distance"]
+        ))
+        self.assertEqual(len(Route.objects.all()), 4)
 
     def test_putch_route(self):
-        data = {"distance": 2000}
+        data = {"distance": 3333}
         response = self.client.patch(self.detail_url, data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(Route.objects.filter(distance=data["distance"]).exists())
+        self.assertEqual(len(Route.objects.all()), 4)
+
 
 ############################################################
 class CrewTests(TestCase):
@@ -427,7 +490,13 @@ class CrewTests(TestCase):
     def test_post_crew(self):
         data = {"first_name":"Jaine", "last_name": "Dow", "position": "first officer"}
         response = self.client.post(self.list_url, data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Crew.objects.filter(
+            first_name=data["first_name"],
+            last_name=data["last_name"],
+            position=data["position"]
+        ).exists())
+        self.assertEqual(len(Crew.objects.all()), 2)
 
     def test_retrive_crew(self):
         response = self.client.get(self.detail_url)
@@ -438,12 +507,20 @@ class CrewTests(TestCase):
     def test_put_crew(self):
         data = {"first_name":"Jaine", "last_name": "Dow", "position": "first officer"}
         response = self.client.put(self.detail_url, data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(Crew.objects.filter(
+            first_name=data["first_name"],
+            last_name=data["last_name"],
+            position=data["position"]
+        ))
+        self.assertEqual(len(Crew.objects.all()), 1)
 
     def test_putch_crew(self):
         data = {"position": "first officer"}
         response = self.client.patch(self.detail_url, data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(Crew.objects.filter(position=data["position"]).exists())
+        self.assertEqual(len(Crew.objects.all()), 1)
 
 ############################################################
 class FlightTests(TestCase):
@@ -452,6 +529,7 @@ class FlightTests(TestCase):
         self.user = create_auth_user()
         self.client.force_authenticate(self.user)
         self.flight = sample_flight()
+        self.crew = sample_crew()
         self.list_url = reverse("airport:flight-list")
         self.detail_url = reverse(
             "airport:flight-detail", kwargs={"pk": self.flight.pk}
@@ -490,14 +568,24 @@ class FlightTests(TestCase):
 
 
     def test_post_flights(self):
+        flights = Flight.objects.all().count()
         data = {
             "route": 1 ,
             "airplane": 1,
             "departure_time": datetime(2025, 1, 15, 9, 30),
             "arrival_time": datetime(2025, 1, 15, 12, 45),
+            "crew": self.crew.pk,
         }
         response = self.client.post(self.list_url, data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Flight.objects.filter(
+            route=data["route"],
+            airplane=data["airplane"],
+            departure_time=data["departure_time"],
+            arrival_time=data["arrival_time"],
+            crew=data["crew"]
+        ))
+        self.assertEqual(len(Flight.objects.all()), flights + 1)
 
     def test_retrive_flight(self):
         response = self.client.get(self.detail_url)
@@ -506,19 +594,32 @@ class FlightTests(TestCase):
         self.assertEqual(response.data, serializer.data)
 
     def test_put_flight(self):
+        num_flights = Flight.objects.all().count()
         data = {
             "route": 1,
             "airplane": 1,
             "departure_time": datetime(2025, 1, 15, 9, 30),
             "arrival_time": datetime(2025, 1, 15, 12, 45),
+            "crew": self.crew.pk,
         }
         response = self.client.put(self.detail_url, data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(Flight.objects.filter(
+            route=data["route"],
+            airplane=data["airplane"],
+            departure_time=data["departure_time"],
+            arrival_time=data["arrival_time"],
+            crew=data["crew"]
+        ))
+        self.assertEqual(len(Flight.objects.all()), num_flights)
 
     def test_putch_flight(self):
-        data = {"arrival_time": datetime.now()}
+        num_flights = Flight.objects.all().count()
+        data = {"arrival_time": datetime(2024, 1, 15, 12, 45)}
         response = self.client.patch(self.detail_url, data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(Flight.objects.filter(arrival_time=data["arrival_time"]).exists())
+        self.assertEqual(len(Flight.objects.all()), num_flights)
 
 
 ############################################################

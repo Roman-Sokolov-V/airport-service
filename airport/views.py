@@ -79,14 +79,24 @@ class CityViewSet(viewsets.ModelViewSet):
     """Endpoint for cities"""
 
     queryset = City.objects.all()
-    serializer_class = CityListSerializer
+    serializer_class = CitySerializer
+
+    def get_serializer_class(self):
+        if self.action in ("list", "retrieve"):
+            return CityListSerializer
+        return self.serializer_class
 
 
 class AirportViewSet(viewsets.ModelViewSet):
     """Endpoint for airports"""
 
     queryset = Airport.objects.all().select_related("closest_big_city__country")
-    serializer_class = AirportListSerializer
+    serializer_class = AirportSerializer
+
+    def get_serializer_class(self):
+        if self.action in ("list", "retrieve"):
+            return AirportListSerializer
+        return self.serializer_class
 
     def get_queryset(self):
         queryset = self.queryset
