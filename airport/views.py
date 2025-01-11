@@ -5,7 +5,11 @@ from rest_framework import viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
+from drf_spectacular.utils import (
+    extend_schema,
+    OpenApiParameter,
+    OpenApiExample,
+)
 from drf_spectacular.types import OpenApiTypes
 
 from airport.models import (
@@ -27,7 +31,6 @@ from airport.serializers import (
     AirplaneSerializer,
     CountrySerializer,
     CitySerializer,
-    AirportSerializer,
     RouteSerializer,
     CrewSerializer,
     FlightSerializer,
@@ -90,7 +93,9 @@ class CityViewSet(viewsets.ModelViewSet):
 class AirportViewSet(viewsets.ModelViewSet):
     """Endpoint for airports"""
 
-    queryset = Airport.objects.all().select_related("closest_big_city__country")
+    queryset = Airport.objects.all().select_related(
+        "closest_big_city__country"
+    )
     serializer_class = AirportSerializer
 
     def get_serializer_class(self):
@@ -130,7 +135,8 @@ class RouteViewSet(viewsets.ModelViewSet):
     """Endpoint for routes"""
 
     queryset = Route.objects.all().prefetch_related(
-        "source__closest_big_city__country", "destination__closest_big_city__country"
+        "source__closest_big_city__country",
+        "destination__closest_big_city__country",
     )
     serializer_class = RouteSerializer
 
@@ -171,11 +177,14 @@ class RouteViewSet(viewsets.ModelViewSet):
                     )
                 elif param == "airports":
                     queryset = queryset.filter(
-                        source__id=int(source), destination__id=int(destination)
+                        source__id=int(source),
+                        destination__id=int(destination),
                     )
             except ValueError:
                 raise ValidationError(
-                    {"airports": "Parameter 'airports' must contain valid integers."}
+                    {
+                        "airports": "Parameter 'airports' must contain valid integers."
+                    }
                 )
             except Exception as e:
                 raise ValidationError({param: str(e)})
@@ -250,10 +259,8 @@ class FlightViewSet(viewsets.ModelViewSet):
                 source, destination = source.strip(), destination.strip()
                 if param == "cities":
                     queryset = queryset.filter(
-                        route__source__closest_big_city__name__icontains
-                        =source,
-                        route__destination__closest_big_city__name__icontains
-                        =destination,
+                        route__source__closest_big_city__name__icontains=source,
+                        route__destination__closest_big_city__name__icontains=destination,
                     )
                 elif param == "countries":
                     queryset = queryset.filter(
@@ -267,7 +274,9 @@ class FlightViewSet(viewsets.ModelViewSet):
                     )
             except ValueError:
                 raise ValidationError(
-                    {"airports": "Parameter 'airports' must contain valid integers."}
+                    {
+                        "airports": "Parameter 'airports' must contain valid integers."
+                    }
                 )
             except Exception as e:
                 raise ValidationError({param: str(e)})
@@ -296,7 +305,7 @@ class OrderViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
-    viewsets.GenericViewSet
+    viewsets.GenericViewSet,
 ):
     """Endpoint for orders"""
 

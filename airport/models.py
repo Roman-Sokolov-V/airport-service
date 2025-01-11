@@ -70,7 +70,8 @@ class Route(models.Model):
         self.route_description = (
             f"From {self.source.name} ({self.source.closest_big_city.name} / "
             f"{self.source.closest_big_city.country.name})"
-            f" to {self.destination.name} ({self.destination.closest_big_city.name}"
+            f" to {self.destination.name} "
+            f"({self.destination.closest_big_city.name}"
             f" / {self.destination.closest_big_city.country.name})"
         )
         super().save(*args, **kwargs)
@@ -89,7 +90,9 @@ class Crew(models.Model):
 
 
 class Flight(models.Model):
-    route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name="flights")
+    route = models.ForeignKey(
+        Route, on_delete=models.CASCADE, related_name="flights"
+    )
     airplane = models.ForeignKey(
         Airplane, on_delete=models.CASCADE, related_name="flights"
     )
@@ -101,7 +104,9 @@ class Flight(models.Model):
 class Order(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orders"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="orders",
     )
 
 
@@ -111,20 +116,26 @@ class Ticket(models.Model):
     flight = models.ForeignKey(
         Flight, on_delete=models.CASCADE, related_name="taken_tickets"
     )
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="tickets")
+    order = models.ForeignKey(
+        Order, on_delete=models.CASCADE, related_name="tickets"
+    )
 
     def __str__(self):
-        return f"row:{self.row} seat:{self.seat}"
+        return f"row: {self.row} seat: {self.seat}"
 
     class Meta:
         unique_together = ("row", "seat", "flight")
 
     @staticmethod
-    def validate_ticket(row: int, rows: int, seat: int, seats: int, error_to_rase):
+    def validate_ticket(
+        row: int, rows: int, seat: int, seats: int, error_to_rase
+    ):
         if not (1 <= row <= rows):
             raise error_to_rase({"row": f"row must be in range [1, {rows}]"})
         if not (1 <= seat <= seats):
-            raise error_to_rase({"seat": f"seat must be in range " f"[1, {seats}]"})
+            raise error_to_rase(
+                {"seat": f"seat must be in range " f"[1, {seats}]"}
+            )
 
     def clean(self):
         self.validate_ticket(

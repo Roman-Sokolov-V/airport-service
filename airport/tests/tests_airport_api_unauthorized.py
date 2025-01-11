@@ -5,6 +5,7 @@ from rest_framework.reverse import reverse
 
 BASE_URL = reverse("airport:api-root")
 
+
 class UnauthenticatedTests(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -44,7 +45,6 @@ class UnauthenticatedTests(TestCase):
     def test_order_view(self):
         response = self.client.get(BASE_URL + "order/")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
 
     def test_airplan_type_detail_view(self):
         response = self.client.get(BASE_URL + "airplane-type/1/")

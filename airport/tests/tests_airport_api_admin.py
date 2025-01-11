@@ -18,7 +18,7 @@ from airport.models import (
     Crew,
     Ticket,
     Flight,
-    Order
+    Order,
 )
 from airport.serializers import (
     AirplaneTypeSerializer,
@@ -32,10 +32,11 @@ from airport.serializers import (
     FlightDetailSerializer,
     OrderListSerializer,
     OrderListSerializer,
-    OrderCreateSerializer
+    OrderCreateSerializer,
 )
 
 BASE_URL = reverse("airport:api-root")
+
 
 def create_auth_user():
     return get_user_model().objects.create_user(
@@ -46,10 +47,12 @@ def create_auth_user():
         is_staff=True,
     )
 
+
 def sample_airplane_type(**params) -> AirplaneType:
     defaults = {"name": "small airplane"}
     defaults.update(params)
     return AirplaneType.objects.create(**defaults)
+
 
 def sample_airplane(**params) -> Airplane:
     airplane_type = sample_airplane_type()
@@ -57,23 +60,27 @@ def sample_airplane(**params) -> Airplane:
         "name": "Dream",
         "rows": 20,
         "seats_in_row": 4,
-        "airplane_type": airplane_type
+        "airplane_type": airplane_type,
     }
     defaults.update(params)
     return Airplane.objects.create(**defaults)
 
-def sample_country(name: str="New Zealand") -> Country:
+
+def sample_country(name: str = "New Zealand") -> Country:
     return Country.objects.create(name=name)
 
-def sample_city(name: str="Kharkiv", **params) -> City:
+
+def sample_city(name: str = "Kharkiv", **params) -> City:
     defaults = {"country": sample_country()}
     defaults.update(params)
     return City.objects.create(name=name, **defaults)
+
 
 def sample_airport(**params) -> Airport:
     defaults = {"name": "Airport_1", "closest_big_city": sample_city()}
     defaults.update(params)
     return Airport.objects.create(**defaults)
+
 
 def sample_route() -> Route:
     country = Country.objects.create(name="USA")
@@ -87,19 +94,23 @@ def sample_route() -> Route:
     airport3 = Airport.objects.create(name="HA", closest_big_city=city3)
     airport4 = Airport.objects.create(name="LVA", closest_big_city=city4)
     route = Route.objects.create(
-        source=airport1,
-        destination=airport2,
-        distance=1000
+        source=airport1, destination=airport2, distance=1000
     )
     Route.objects.create(source=airport2, destination=airport3, distance=1000)
     Route.objects.create(source=airport3, destination=airport4, distance=1000)
     Route.objects.create(source=airport4, destination=airport1, distance=1000)
     return route
 
+
 def sample_crew(**params) -> Crew:
-    defaults = {"first_name":"Jhon", "last_name": "Dow", "position": "captain"}
+    defaults = {
+        "first_name": "Jhon",
+        "last_name": "Dow",
+        "position": "captain",
+    }
     defaults.update(params)
     return Crew.objects.create(**defaults)
+
 
 def sample_flight(**params) -> Flight:
     defaults = {
@@ -115,15 +126,14 @@ def sample_flight(**params) -> Flight:
     Flight.objects.create(
         route=Route.objects.get(pk=2),
         airplane=Airplane.objects.get(pk=1),
-        **defaults
+        **defaults,
     )
     Flight.objects.create(
         route=Route.objects.get(pk=3),
         airplane=Airplane.objects.get(pk=1),
-        **defaults
+        **defaults,
     )
     return flight
-
 
 
 class AirplaneTypeTests(TestCase):
@@ -132,7 +142,6 @@ class AirplaneTypeTests(TestCase):
         self.user = create_auth_user()
         self.client.force_authenticate(self.user)
         self.airplan_type = sample_airplane_type()
-
 
     def test_list_airplane_type(self):
         response = self.client.get(BASE_URL + "airplane-type/")
@@ -143,9 +152,13 @@ class AirplaneTypeTests(TestCase):
 
     def test_post_airplane_type(self):
         data = {"name": "big airplane"}
-        response = self.client.post(BASE_URL + "airplane-type/", data, format="json")
+        response = self.client.post(
+            BASE_URL + "airplane-type/", data, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(AirplaneType.objects.filter(name=data["name"]).exists())
+        self.assertTrue(
+            AirplaneType.objects.filter(name=data["name"]).exists()
+        )
         self.assertEqual(len(AirplaneType.objects.all()), 2)
 
     def test_retrive_airplane_type(self):
@@ -157,17 +170,26 @@ class AirplaneTypeTests(TestCase):
 
     def test_put_airplane_type(self):
         data = {"name": "big airplane"}
-        response = self.client.put(BASE_URL + "airplane-type/1/", data, format="json")
+        response = self.client.put(
+            BASE_URL + "airplane-type/1/", data, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(AirplaneType.objects.filter(name=data["name"]).exists())
+        self.assertTrue(
+            AirplaneType.objects.filter(name=data["name"]).exists()
+        )
         self.assertEqual(len(AirplaneType.objects.all()), 1)
 
     def test_putch_airplane_type(self):
         data = {"name": "big airplane"}
-        response = self.client.patch(BASE_URL + "airplane-type/1/", data, format="json")
+        response = self.client.patch(
+            BASE_URL + "airplane-type/1/", data, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(AirplaneType.objects.filter(name=data["name"]).exists())
+        self.assertTrue(
+            AirplaneType.objects.filter(name=data["name"]).exists()
+        )
         self.assertEqual(len(AirplaneType.objects.all()), 1)
+
 
 ############################################################
 class AirplaneTests(TestCase):
@@ -189,16 +211,20 @@ class AirplaneTests(TestCase):
             "name": "New plane",
             "rows": 20,
             "seats_in_row": 4,
-            "airplane_type": 1
+            "airplane_type": 1,
         }
-        response = self.client.post(BASE_URL + "airplane/", data, format="json")
+        response = self.client.post(
+            BASE_URL + "airplane/", data, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(Airplane.objects.filter(
-            name=data["name"],
-            rows=data["rows"],
-            seats_in_row=data["seats_in_row"],
-            airplane_type=data["airplane_type"]
-        ).exists())
+        self.assertTrue(
+            Airplane.objects.filter(
+                name=data["name"],
+                rows=data["rows"],
+                seats_in_row=data["seats_in_row"],
+                airplane_type=data["airplane_type"],
+            ).exists()
+        )
         self.assertEqual(len(Airplane.objects.all()), 2)
 
     def test_retrive_airplane(self):
@@ -212,26 +238,35 @@ class AirplaneTests(TestCase):
             "name": "New plane",
             "rows": 20,
             "seats_in_row": 4,
-            "airplane_type": 1
+            "airplane_type": 1,
         }
-        response = self.client.put(BASE_URL + "airplane/1/", data, format="json")
+        response = self.client.put(
+            BASE_URL + "airplane/1/", data, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(Airplane.objects.filter(
-            name=data["name"],
-            rows=data["rows"],
-            seats_in_row=data["seats_in_row"],
-            airplane_type=data["airplane_type"]
-        ).exists())
+        self.assertTrue(
+            Airplane.objects.filter(
+                name=data["name"],
+                rows=data["rows"],
+                seats_in_row=data["seats_in_row"],
+                airplane_type=data["airplane_type"],
+            ).exists()
+        )
         self.assertEqual(len(Airplane.objects.all()), 1)
 
     def test_putch_airplane(self):
         data = {"name": "big airplane"}
-        response = self.client.patch(BASE_URL + "airplane/1/", data, format="json")
+        response = self.client.patch(
+            BASE_URL + "airplane/1/", data, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(Airplane.objects.filter(
-            name=data["name"],
-        ))
+        self.assertTrue(
+            Airplane.objects.filter(
+                name=data["name"],
+            )
+        )
         self.assertEqual(len(Airplane.objects.all()), 1)
+
 
 ############################################################
 class CountryTests(TestCase):
@@ -274,10 +309,14 @@ class CountryTests(TestCase):
 
     def test_putch_country(self):
         data = {"name": "Neverland"}
-        response = self.client.patch(self.detail_url, data,)
+        response = self.client.patch(
+            self.detail_url,
+            data,
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(Country.objects.filter(name=data["name"]).exists())
         self.assertEqual(len(Country.objects.all()), 1)
+
 
 ############################################################
 class CityTests(TestCase):
@@ -300,7 +339,7 @@ class CityTests(TestCase):
         self.assertEqual(response.data["results"], serializer.data)
 
     def test_post_city(self):
-        data = {"name":"Just city", "country": self.country.id}
+        data = {"name": "Just city", "country": self.country.id}
         response = self.client.post(self.list_url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(City.objects.filter(name=data["name"]).exists())
@@ -313,7 +352,7 @@ class CityTests(TestCase):
         self.assertEqual(response.data, serializer.data)
 
     def test_put_country(self):
-        data = {"name":"Just city", "country": self.country.id}
+        data = {"name": "Just city", "country": self.country.id}
         response = self.client.put(self.detail_url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(City.objects.filter(name=data["name"]).exists())
@@ -325,6 +364,7 @@ class CityTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(City.objects.filter(name=data["name"]).exists())
         self.assertEqual(len(City.objects.all()), 1)
+
 
 ############################################################
 class AirportTests(TestCase):
@@ -347,7 +387,7 @@ class AirportTests(TestCase):
         self.assertEqual(response.data["results"], serializer.data)
 
     def test_post_airport(self):
-        data = {"name":"UWR", "closest_big_city": self.city.pk}
+        data = {"name": "UWR", "closest_big_city": self.city.pk}
         response = self.client.post(self.list_url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(Airport.objects.filter(name=data["name"]).exists())
@@ -360,7 +400,7 @@ class AirportTests(TestCase):
         self.assertEqual(response.data, serializer.data)
 
     def test_put_airport(self):
-        data = {"name":"UWR", "closest_big_city": self.city.pk}
+        data = {"name": "UWR", "closest_big_city": self.city.pk}
         response = self.client.put(self.detail_url, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(Airport.objects.filter(name=data["name"]).exists())
@@ -386,7 +426,6 @@ class RouteTests(TestCase):
             "airport:route-detail", kwargs={"pk": self.route.pk}
         )
 
-
     def test_list_routs(self):
         response = self.client.get(self.list_url)
         routs = Route.objects.all()
@@ -398,7 +437,7 @@ class RouteTests(TestCase):
         response = self.client.get(self.list_url + "?countries=us-uk")
         routs = Route.objects.filter(
             source__closest_big_city__country__name__icontains="us",
-            destination__closest_big_city__country__name__icontains="uk"
+            destination__closest_big_city__country__name__icontains="uk",
         )
         serializer = RouteListSerializer(routs, many=True)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -407,37 +446,30 @@ class RouteTests(TestCase):
         response = self.client.get(self.list_url + "?cities=fa-ha")
         routs = Route.objects.filter(
             source__closest_big_city__name__icontains="fa",
-            destination__closest_big_city__name__icontains="ha"
+            destination__closest_big_city__name__icontains="ha",
         )
         serializer = RouteListSerializer(routs, many=True)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["results"], serializer.data)
 
         response = self.client.get(self.list_url + "?airports=1-2")
-        routs = Route.objects.filter(
-            source__id=1,
-            destination__id=2
-        )
+        routs = Route.objects.filter(source__id=1, destination__id=2)
         serializer = RouteListSerializer(routs, many=True)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["results"], serializer.data)
 
-
     def test_post_route(self):
-        data = {
-            "source": 2,
-            "destination": 1,
-            "distance": 20000
-        }
+        data = {"source": 2, "destination": 1, "distance": 20000}
         response = self.client.post(self.list_url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(Route.objects.filter(
-            source__id=data["source"],
-            destination__id=data["destination"],
-            distance=data["distance"]
-        ).exists())
+        self.assertTrue(
+            Route.objects.filter(
+                source__id=data["source"],
+                destination__id=data["destination"],
+                distance=data["distance"],
+            ).exists()
+        )
         self.assertEqual(len(Route.objects.all()), 5)
-
 
     def test_retrive_route(self):
         response = self.client.get(self.detail_url)
@@ -446,25 +478,25 @@ class RouteTests(TestCase):
         self.assertEqual(response.data, serializer.data)
 
     def test_put_route(self):
-        data = {
-            "source": 3,
-            "destination": 4,
-            "distance": 100
-        }
+        data = {"source": 3, "destination": 4, "distance": 100}
         response = self.client.put(self.detail_url, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(Route.objects.filter(
-            source__id=data["source"],
-            destination__id=data["destination"],
-            distance=data["distance"]
-        ))
+        self.assertTrue(
+            Route.objects.filter(
+                source__id=data["source"],
+                destination__id=data["destination"],
+                distance=data["distance"],
+            )
+        )
         self.assertEqual(len(Route.objects.all()), 4)
 
     def test_putch_route(self):
         data = {"distance": 3333}
         response = self.client.patch(self.detail_url, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(Route.objects.filter(distance=data["distance"]).exists())
+        self.assertTrue(
+            Route.objects.filter(distance=data["distance"]).exists()
+        )
         self.assertEqual(len(Route.objects.all()), 4)
 
 
@@ -488,14 +520,20 @@ class CrewTests(TestCase):
         self.assertEqual(response.data["results"], serializer.data)
 
     def test_post_crew(self):
-        data = {"first_name":"Jaine", "last_name": "Dow", "position": "first officer"}
+        data = {
+            "first_name": "Jaine",
+            "last_name": "Dow",
+            "position": "first officer",
+        }
         response = self.client.post(self.list_url, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(Crew.objects.filter(
-            first_name=data["first_name"],
-            last_name=data["last_name"],
-            position=data["position"]
-        ).exists())
+        self.assertTrue(
+            Crew.objects.filter(
+                first_name=data["first_name"],
+                last_name=data["last_name"],
+                position=data["position"],
+            ).exists()
+        )
         self.assertEqual(len(Crew.objects.all()), 2)
 
     def test_retrive_crew(self):
@@ -505,22 +543,31 @@ class CrewTests(TestCase):
         self.assertEqual(response.data, serializer.data)
 
     def test_put_crew(self):
-        data = {"first_name":"Jaine", "last_name": "Dow", "position": "first officer"}
+        data = {
+            "first_name": "Jaine",
+            "last_name": "Dow",
+            "position": "first officer",
+        }
         response = self.client.put(self.detail_url, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(Crew.objects.filter(
-            first_name=data["first_name"],
-            last_name=data["last_name"],
-            position=data["position"]
-        ))
+        self.assertTrue(
+            Crew.objects.filter(
+                first_name=data["first_name"],
+                last_name=data["last_name"],
+                position=data["position"],
+            )
+        )
         self.assertEqual(len(Crew.objects.all()), 1)
 
     def test_putch_crew(self):
         data = {"position": "first officer"}
         response = self.client.patch(self.detail_url, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(Crew.objects.filter(position=data["position"]).exists())
+        self.assertTrue(
+            Crew.objects.filter(position=data["position"]).exists()
+        )
         self.assertEqual(len(Crew.objects.all()), 1)
+
 
 ############################################################
 class FlightTests(TestCase):
@@ -537,8 +584,9 @@ class FlightTests(TestCase):
 
     def test_list_flights(self):
         response = self.client.get(self.list_url)
-        flights = Flight.objects.all().annotate(num_taken_tickets=Count(
-            "taken_tickets"))
+        flights = Flight.objects.all().annotate(
+            num_taken_tickets=Count("taken_tickets")
+        )
         serializer = FlightListSerializer(flights, many=True)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["results"], serializer.data)
@@ -547,30 +595,24 @@ class FlightTests(TestCase):
         response = self.client.get(self.list_url + "?countries=us-uk")
         flights = Flight.objects.filter(
             route__source__closest_big_city__country__name__icontains="us",
-            route__destination__closest_big_city__country__name__icontains="uk"
-        ).annotate(
-            num_taken_tickets=Count("taken_tickets")
-        )
+            route__destination__closest_big_city__country__name__icontains="uk",
+        ).annotate(num_taken_tickets=Count("taken_tickets"))
         serializer = FlightListSerializer(flights, many=True)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["results"], serializer.data)
 
         response = self.client.get(self.list_url + "?airports=1-2")
         flights = Flight.objects.filter(
-            route__source__id=1,
-            route__destination__id=2
-        ).annotate(
-            num_taken_tickets=Count("taken_tickets")
-        )
+            route__source__id=1, route__destination__id=2
+        ).annotate(num_taken_tickets=Count("taken_tickets"))
         serializer = FlightListSerializer(flights, many=True)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["results"], serializer.data)
 
-
     def test_post_flights(self):
         flights = Flight.objects.all().count()
         data = {
-            "route": 1 ,
+            "route": 1,
             "airplane": 1,
             "departure_time": datetime(2025, 1, 15, 9, 30),
             "arrival_time": datetime(2025, 1, 15, 12, 45),
@@ -578,13 +620,15 @@ class FlightTests(TestCase):
         }
         response = self.client.post(self.list_url, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(Flight.objects.filter(
-            route=data["route"],
-            airplane=data["airplane"],
-            departure_time=data["departure_time"],
-            arrival_time=data["arrival_time"],
-            crew=data["crew"]
-        ))
+        self.assertTrue(
+            Flight.objects.filter(
+                route=data["route"],
+                airplane=data["airplane"],
+                departure_time=data["departure_time"],
+                arrival_time=data["arrival_time"],
+                crew=data["crew"],
+            )
+        )
         self.assertEqual(len(Flight.objects.all()), flights + 1)
 
     def test_retrive_flight(self):
@@ -604,13 +648,15 @@ class FlightTests(TestCase):
         }
         response = self.client.put(self.detail_url, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(Flight.objects.filter(
-            route=data["route"],
-            airplane=data["airplane"],
-            departure_time=data["departure_time"],
-            arrival_time=data["arrival_time"],
-            crew=data["crew"]
-        ))
+        self.assertTrue(
+            Flight.objects.filter(
+                route=data["route"],
+                airplane=data["airplane"],
+                departure_time=data["departure_time"],
+                arrival_time=data["arrival_time"],
+                crew=data["crew"],
+            )
+        )
         self.assertEqual(len(Flight.objects.all()), num_flights)
 
     def test_putch_flight(self):
@@ -618,7 +664,9 @@ class FlightTests(TestCase):
         data = {"arrival_time": datetime(2024, 1, 15, 12, 45)}
         response = self.client.patch(self.detail_url, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(Flight.objects.filter(arrival_time=data["arrival_time"]).exists())
+        self.assertTrue(
+            Flight.objects.filter(arrival_time=data["arrival_time"]).exists()
+        )
         self.assertEqual(len(Flight.objects.all()), num_flights)
 
 
@@ -650,35 +698,18 @@ class OrderTests(TestCase):
         self.assertEqual(response.data["results"], serializer.data)
         self.assertEqual(len(response.data["results"]), 1)
 
-
     def test_post_order(self):
         data = {
             "tickets": [
-                {
-                    "row": 1,
-                    "seat": 1,
-                    "flight": self.flight.id
-                },
-                {
-                    "row": 1,
-                    "seat": 2,
-                    "flight": self.flight.id
-                }
+                {"row": 1, "seat": 1, "flight": self.flight.id},
+                {"row": 1, "seat": 2, "flight": self.flight.id},
             ]
         }
         response = self.client.post(self.list_url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Ticket.objects.count(), len(data["tickets"]))
 
-        data = {
-            "tickets": [
-                {
-                    "row": 1,
-                    "seat": 1,
-                    "flight": self.flight.id
-                }
-            ]
-        }
+        data = {"tickets": [{"row": 1, "seat": 1, "flight": self.flight.id}]}
         response = self.client.post(self.list_url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -710,27 +741,15 @@ class OrderTests(TestCase):
         self.assertEqual(response.data, serializer.data)
 
     def test_put_order(self):
-        data = {
-            "tickets": [
-                {
-                    "row": 1,
-                    "seat": 1,
-                    "flight": self.flight.id
-                }
-            ]
-        }
+        data = {"tickets": [{"row": 1, "seat": 1, "flight": self.flight.id}]}
         response = self.client.put(self.detail_url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(
+            response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED
+        )
 
     def test_putch_order(self):
-        data = {
-            "tickets": [
-                {
-                    "row": 1,
-                    "seat": 1,
-                    "flight": self.flight.id
-                }
-            ]
-        }
+        data = {"tickets": [{"row": 1, "seat": 1, "flight": self.flight.id}]}
         response = self.client.patch(self.detail_url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(
+            response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED
+        )

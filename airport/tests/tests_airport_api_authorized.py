@@ -18,7 +18,7 @@ from airport.models import (
     Crew,
     Ticket,
     Flight,
-    Order
+    Order,
 )
 from airport.serializers import (
     AirplaneTypeSerializer,
@@ -32,10 +32,11 @@ from airport.serializers import (
     FlightDetailSerializer,
     OrderListSerializer,
     OrderListSerializer,
-    OrderCreateSerializer
+    OrderCreateSerializer,
 )
 
 BASE_URL = reverse("airport:api-root")
+
 
 def create_auth_user():
     return get_user_model().objects.create_user(
@@ -45,10 +46,12 @@ def create_auth_user():
         last_name="User",
     )
 
+
 def sample_airplane_type(**params) -> AirplaneType:
     defaults = {"name": "small airplane"}
     defaults.update(params)
     return AirplaneType.objects.create(**defaults)
+
 
 def sample_airplane(**params) -> Airplane:
     airplane_type = sample_airplane_type()
@@ -56,23 +59,27 @@ def sample_airplane(**params) -> Airplane:
         "name": "Dream",
         "rows": 20,
         "seats_in_row": 4,
-        "airplane_type": airplane_type
+        "airplane_type": airplane_type,
     }
     defaults.update(params)
     return Airplane.objects.create(**defaults)
 
-def sample_country(name: str="New Zealand") -> Country:
+
+def sample_country(name: str = "New Zealand") -> Country:
     return Country.objects.create(name=name)
 
-def sample_city(name: str="Kharkiv", **params) -> City:
+
+def sample_city(name: str = "Kharkiv", **params) -> City:
     defaults = {"country": sample_country()}
     defaults.update(params)
     return City.objects.create(name=name, **defaults)
+
 
 def sample_airport(**params) -> Airport:
     defaults = {"name": "Airport_1", "closest_big_city": sample_city()}
     defaults.update(params)
     return Airport.objects.create(**defaults)
+
 
 def sample_route() -> Route:
     country = Country.objects.create(name="USA")
@@ -86,19 +93,23 @@ def sample_route() -> Route:
     airport3 = Airport.objects.create(name="HA", closest_big_city=city3)
     airport4 = Airport.objects.create(name="LVA", closest_big_city=city4)
     route = Route.objects.create(
-        source=airport1,
-        destination=airport2,
-        distance=1000
+        source=airport1, destination=airport2, distance=1000
     )
     Route.objects.create(source=airport2, destination=airport3, distance=1000)
     Route.objects.create(source=airport3, destination=airport4, distance=1000)
     Route.objects.create(source=airport4, destination=airport1, distance=1000)
     return route
 
+
 def sample_crew(**params) -> Crew:
-    defaults = {"first_name":"Jhon", "last_name": "Dow", "position": "captain"}
+    defaults = {
+        "first_name": "Jhon",
+        "last_name": "Dow",
+        "position": "captain",
+    }
     defaults.update(params)
     return Crew.objects.create(**defaults)
+
 
 def sample_flight(**params) -> Flight:
     defaults = {
@@ -114,15 +125,14 @@ def sample_flight(**params) -> Flight:
     Flight.objects.create(
         route=Route.objects.get(pk=2),
         airplane=Airplane.objects.get(pk=1),
-        **defaults
+        **defaults,
     )
     Flight.objects.create(
         route=Route.objects.get(pk=3),
         airplane=Airplane.objects.get(pk=1),
-        **defaults
+        **defaults,
     )
     return flight
-
 
 
 class AirplaneTypeTests(TestCase):
@@ -131,7 +141,6 @@ class AirplaneTypeTests(TestCase):
         self.user = create_auth_user()
         self.client.force_authenticate(self.user)
         self.airplan_type = sample_airplane_type()
-
 
     def test_list_airplane_type(self):
         response = self.client.get(BASE_URL + "airplane-type/")
@@ -162,6 +171,7 @@ class AirplaneTypeTests(TestCase):
         response = self.client.patch(BASE_URL + "airplane-type/1/", data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+
 ############################################################
 class AirplaneTests(TestCase):
     def setUp(self):
@@ -178,10 +188,12 @@ class AirplaneTests(TestCase):
         self.assertEqual(response.data["results"], serializer.data)
 
     def test_post_airplane(self):
-        data = {"name": "New plane",
-        "rows": 20,
-        "seats_in_row": 4,
-        "airplane_type": 1}
+        data = {
+            "name": "New plane",
+            "rows": 20,
+            "seats_in_row": 4,
+            "airplane_type": 1,
+        }
         response = self.client.post(BASE_URL + "airplane/", data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -192,10 +204,12 @@ class AirplaneTests(TestCase):
         self.assertEqual(response.data, serializer.data)
 
     def test_put_airplane(self):
-        data = {"name": "New plane",
-                "rows": 20,
-                "seats_in_row": 4,
-                "airplane_type": 1}
+        data = {
+            "name": "New plane",
+            "rows": 20,
+            "seats_in_row": 4,
+            "airplane_type": 1,
+        }
         response = self.client.put(BASE_URL + "airplane/1/", data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -204,7 +218,7 @@ class AirplaneTests(TestCase):
         response = self.client.patch(BASE_URL + "airplane/1/", data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-############################################################
+
 class CountryTests(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -244,7 +258,7 @@ class CountryTests(TestCase):
         response = self.client.patch(self.detail_url, data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-############################################################
+
 class CityTests(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -265,7 +279,7 @@ class CityTests(TestCase):
         self.assertEqual(response.data["results"], serializer.data)
 
     def test_post_city(self):
-        data = {"name":"Just city", "country": self.country.id}
+        data = {"name": "Just city", "country": self.country.id}
         response = self.client.post(self.list_url, data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -276,7 +290,7 @@ class CityTests(TestCase):
         self.assertEqual(response.data, serializer.data)
 
     def test_put_country(self):
-        data = {"name":"Just city", "country": self.country.id}
+        data = {"name": "Just city", "country": self.country.id}
         response = self.client.put(self.detail_url, data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -285,7 +299,7 @@ class CityTests(TestCase):
         response = self.client.patch(self.detail_url, data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-############################################################
+
 class AirportTests(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -306,7 +320,7 @@ class AirportTests(TestCase):
         self.assertEqual(response.data["results"], serializer.data)
 
     def test_post_airport(self):
-        data = {"name":"UWR", "closest_big_city": self.city.pk}
+        data = {"name": "UWR", "closest_big_city": self.city.pk}
         response = self.client.post(self.list_url, data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -317,7 +331,7 @@ class AirportTests(TestCase):
         self.assertEqual(response.data, serializer.data)
 
     def test_put_airport(self):
-        data = {"name":"UWR", "closest_big_city": self.city.pk}
+        data = {"name": "UWR", "closest_big_city": self.city.pk}
         response = self.client.put(self.detail_url, data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -327,7 +341,6 @@ class AirportTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-############################################################
 class RouteTests(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -338,7 +351,6 @@ class RouteTests(TestCase):
         self.detail_url = reverse(
             "airport:route-detail", kwargs={"pk": self.route.pk}
         )
-
 
     def test_list_routs(self):
         response = self.client.get(self.list_url)
@@ -351,7 +363,7 @@ class RouteTests(TestCase):
         response = self.client.get(self.list_url + "?countries=us-uk")
         routs = Route.objects.filter(
             source__closest_big_city__country__name__icontains="us",
-            destination__closest_big_city__country__name__icontains="uk"
+            destination__closest_big_city__country__name__icontains="uk",
         )
         serializer = RouteListSerializer(routs, many=True)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -360,28 +372,20 @@ class RouteTests(TestCase):
         response = self.client.get(self.list_url + "?cities=fa-ha")
         routs = Route.objects.filter(
             source__closest_big_city__name__icontains="fa",
-            destination__closest_big_city__name__icontains="ha"
+            destination__closest_big_city__name__icontains="ha",
         )
         serializer = RouteListSerializer(routs, many=True)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["results"], serializer.data)
 
         response = self.client.get(self.list_url + "?airports=1-2")
-        routs = Route.objects.filter(
-            source__id=1,
-            destination__id=2
-        )
+        routs = Route.objects.filter(source__id=1, destination__id=2)
         serializer = RouteListSerializer(routs, many=True)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["results"], serializer.data)
 
-
     def test_post_route(self):
-        data = {
-            "source": 2,
-            "destination": 1,
-            "distance": 2000
-        }
+        data = {"source": 2, "destination": 1, "distance": 2000}
         response = self.client.post(self.list_url, data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -392,11 +396,7 @@ class RouteTests(TestCase):
         self.assertEqual(response.data, serializer.data)
 
     def test_put_route(self):
-        data = {
-            "source": 2,
-            "destination": 3,
-            "distance": 2000
-        }
+        data = {"source": 2, "destination": 3, "distance": 2000}
         response = self.client.put(self.detail_url, data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -405,7 +405,7 @@ class RouteTests(TestCase):
         response = self.client.patch(self.detail_url, data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-############################################################
+
 class CrewTests(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -425,7 +425,11 @@ class CrewTests(TestCase):
         self.assertEqual(response.data["results"], serializer.data)
 
     def test_post_crew(self):
-        data = {"first_name":"Jaine", "last_name": "Dow", "position": "first officer"}
+        data = {
+            "first_name": "Jaine",
+            "last_name": "Dow",
+            "position": "first officer",
+        }
         response = self.client.post(self.list_url, data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -436,7 +440,11 @@ class CrewTests(TestCase):
         self.assertEqual(response.data, serializer.data)
 
     def test_put_crew(self):
-        data = {"first_name":"Jaine", "last_name": "Dow", "position": "first officer"}
+        data = {
+            "first_name": "Jaine",
+            "last_name": "Dow",
+            "position": "first officer",
+        }
         response = self.client.put(self.detail_url, data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -445,7 +453,7 @@ class CrewTests(TestCase):
         response = self.client.patch(self.detail_url, data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-############################################################
+
 class FlightTests(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -459,8 +467,9 @@ class FlightTests(TestCase):
 
     def test_list_flights(self):
         response = self.client.get(self.list_url)
-        flights = Flight.objects.all().annotate(num_taken_tickets=Count(
-            "taken_tickets"))
+        flights = Flight.objects.all().annotate(
+            num_taken_tickets=Count("taken_tickets")
+        )
         serializer = FlightListSerializer(flights, many=True)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["results"], serializer.data)
@@ -469,29 +478,23 @@ class FlightTests(TestCase):
         response = self.client.get(self.list_url + "?countries=us-uk")
         flights = Flight.objects.filter(
             route__source__closest_big_city__country__name__icontains="us",
-            route__destination__closest_big_city__country__name__icontains="uk"
-        ).annotate(
-            num_taken_tickets=Count("taken_tickets")
-        )
+            route__destination__closest_big_city__country__name__icontains="uk",
+        ).annotate(num_taken_tickets=Count("taken_tickets"))
         serializer = FlightListSerializer(flights, many=True)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["results"], serializer.data)
 
         response = self.client.get(self.list_url + "?airports=1-2")
         flights = Flight.objects.filter(
-            route__source__id=1,
-            route__destination__id=2
-        ).annotate(
-            num_taken_tickets=Count("taken_tickets")
-        )
+            route__source__id=1, route__destination__id=2
+        ).annotate(num_taken_tickets=Count("taken_tickets"))
         serializer = FlightListSerializer(flights, many=True)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["results"], serializer.data)
 
-
     def test_post_flights(self):
         data = {
-            "route": 1 ,
+            "route": 1,
             "airplane": 1,
             "departure_time": datetime(2025, 1, 15, 9, 30),
             "arrival_time": datetime(2025, 1, 15, 12, 45),
@@ -521,7 +524,6 @@ class FlightTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-############################################################
 class OrderTests(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -549,35 +551,18 @@ class OrderTests(TestCase):
         self.assertEqual(response.data["results"], serializer.data)
         self.assertEqual(len(response.data["results"]), 1)
 
-
     def test_post_order(self):
         data = {
             "tickets": [
-                {
-                    "row": 1,
-                    "seat": 1,
-                    "flight": self.flight.id
-                },
-                {
-                    "row": 1,
-                    "seat": 2,
-                    "flight": self.flight.id
-                }
+                {"row": 1, "seat": 1, "flight": self.flight.id},
+                {"row": 1, "seat": 2, "flight": self.flight.id},
             ]
         }
         response = self.client.post(self.list_url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Ticket.objects.count(), len(data["tickets"]))
 
-        data = {
-            "tickets": [
-                {
-                    "row": 1,
-                    "seat": 1,
-                    "flight": self.flight.id
-                }
-            ]
-        }
+        data = {"tickets": [{"row": 1, "seat": 1, "flight": self.flight.id}]}
         response = self.client.post(self.list_url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -609,27 +594,15 @@ class OrderTests(TestCase):
         self.assertEqual(response.data, serializer.data)
 
     def test_put_order(self):
-        data = {
-            "tickets": [
-                {
-                    "row": 1,
-                    "seat": 1,
-                    "flight": self.flight.id
-                }
-            ]
-        }
+        data = {"tickets": [{"row": 1, "seat": 1, "flight": self.flight.id}]}
         response = self.client.put(self.detail_url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(
+            response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED
+        )
 
     def test_putch_order(self):
-        data = {
-            "tickets": [
-                {
-                    "row": 1,
-                    "seat": 1,
-                    "flight": self.flight.id
-                }
-            ]
-        }
+        data = {"tickets": [{"row": 1, "seat": 1, "flight": self.flight.id}]}
         response = self.client.patch(self.detail_url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(
+            response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED
+        )

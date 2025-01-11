@@ -1,9 +1,20 @@
 from django.db import transaction
 from django.db.models import Count
 from rest_framework import serializers
-
-from airport.models import *
 from rest_framework.validators import UniqueTogetherValidator
+
+from airport.models import (
+    AirplaneType,
+    Airport,
+    Country,
+    City,
+    Airplane,
+    Route,
+    Crew,
+    Flight,
+    Order,
+    Ticket,
+)
 
 
 class AirplaneTypeSerializer(serializers.ModelSerializer):
@@ -109,7 +120,14 @@ class CrewSerializer(serializers.ModelSerializer):
 class FlightSerializer(serializers.ModelSerializer):
     class Meta:
         model = Flight
-        fields = ("id", "route", "airplane", "departure_time", "arrival_time", "crew")
+        fields = (
+            "id",
+            "route",
+            "airplane",
+            "departure_time",
+            "arrival_time",
+            "crew",
+        )
 
 
 class FlightOrderSerializer(serializers.ModelSerializer):
@@ -174,11 +192,13 @@ class FlightDetailSerializer(serializers.ModelSerializer):
 
     def get_available_tickets(self, obj):
         available_tickets = []
-        taken_tickets = Ticket.objects.filter(flight=obj).values_list("row", "seat")
+        taken_tickets = Ticket.objects.filter(flight=obj).values_list(
+            "row", "seat"
+        )
         for row in range(1, obj.airplane.rows + 1):
             for seat in range(1, obj.airplane.seats_in_row + 1):
                 if (row, seat) not in taken_tickets:
-                    available_tickets.append(f"row:{row} seat:{seat}")
+                    available_tickets.append(f"row: {row} seat: {seat}")
         return available_tickets
 
 
@@ -233,5 +253,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             tickets_data = validated_data.pop("tickets")
             order = Order.objects.create(**validated_data)
             for ticket_data in tickets_data:
-                order.tickets.add(Ticket.objects.create(order=order, **ticket_data))
+                order.tickets.add(
+                    Ticket.objects.create(order=order, **ticket_data)
+                )
             return order

@@ -6,3 +6,5 @@ env.sample
 db.sqlite3
 docker-compose.yaml
 .idea
+.flake8
+pyproject.toml
